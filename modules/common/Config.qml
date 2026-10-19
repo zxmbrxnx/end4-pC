@@ -480,7 +480,8 @@ Singleton {
                         property real x: 400
                         property real y: 120
                         property real z: 0
-                        property int maxSessions: 6
+                        property real width: 360
+                        property real height: 340
                         property bool showCost: true
                         property bool showProject: true
                         property bool privacyMode: false

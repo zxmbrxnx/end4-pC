@@ -180,15 +180,49 @@ ContentPage {
 
                 ConfigSlider {
                     Layout.fillWidth: true
-                    text: "Max sessions"
-                    buttonIcon: "format_list_numbered"
-                    value: Config.options.background.widgets.opencodeHub.maxSessions
-                    from: 3
-                    to: 12
-                    stepSize: 1
+                    text: "Widget width"
+                    buttonIcon: "width"
+                    value: Config.options.background.widgets.opencodeHub.width
+                    from: 320
+                    to: 760
+                    stepSize: 20
                     usePercentTooltip: false
-                    stopIndicatorValues: [6]
-                    onValueChanged: Config.options.background.widgets.opencodeHub.maxSessions = Math.round(value)
+                    stopIndicatorValues: [360]
+                    onValueChanged: Config.options.background.widgets.opencodeHub.width = Math.round(value)
+                }
+
+                ConfigSlider {
+                    Layout.fillWidth: true
+                    text: "Widget height"
+                    buttonIcon: "height"
+                    value: Config.options.background.widgets.opencodeHub.height
+                    from: 280
+                    to: 820
+                    stepSize: 20
+                    usePercentTooltip: false
+                    stopIndicatorValues: [340]
+                    onValueChanged: Config.options.background.widgets.opencodeHub.height = Math.round(value)
+                }
+
+                RippleButton {
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    buttonRadius: Appearance.rounding.full
+                    colBackground: Appearance.colors.colSecondaryContainer
+                    colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                    colRipple: Appearance.colors.colSecondaryContainerActive
+                    onClicked: {
+                        Config.options.background.widgets.opencodeHub.width = 360;
+                        Config.options.background.widgets.opencodeHub.height = 340;
+                    }
+
+                    contentItem: StyledText {
+                        text: "Reset size"
+                        horizontalAlignment: Text.AlignHCenter
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.weight: Font.Medium
+                        color: Appearance.colors.colOnSecondaryContainer
+                    }
                 }
 
                 ConfigSelectionArray {
@@ -201,6 +235,16 @@ ContentPage {
                     ]
                     onSelected: newValue => Config.options.background.widgets.opencodeHub.defaultPage = newValue
                 }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                Layout.leftMargin: 8
+                Layout.rightMargin: 8
+                text: "You can also drag the bottom-right corner of the widget to resize it."
+                wrapMode: Text.Wrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
             }
         }
 
