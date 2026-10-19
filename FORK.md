@@ -62,7 +62,7 @@ Keep these changes small and isolated. Everything else should live in new files.
 | File | Change |
 | --- | --- |
 | `services/DesktopWidgets.qml` | catalog entry |
-| `modules/common/Config.qml` | `background.widgets.opencode` block |
+| `modules/common/Config.qml` | `background.widgets.opencodeHub` block |
 | `modules/ii/background/WidgetsLoader.qml` | import, model entry, component |
 | `modules/ii/settings/pages/BarConfig.qml` | bar widget entry |
 | `modules/ii/settings/DashboardBarWidgets.qml` | bar widget entry |

@@ -21,7 +21,9 @@ import qs.modules.common.functions
 Singleton {
     id: root
 
-    readonly property string statePath: FileUtils.trimFileProtocol(`${Directories.state}/user/opencode/state.json`)
+    readonly property string statePath: FileUtils.trimFileProtocol(
+        Quickshell.env("QS_OPENCODE_STATE_PATH") || `${Directories.state}/user/opencode/state.json`
+    )
     readonly property string bridgeScript: Quickshell.shellPath("scripts/ai/opencode-bridge.py")
 
     property var snapshot: ({
