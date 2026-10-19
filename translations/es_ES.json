@@ -1343,5 +1343,6 @@
   "Show waiting badge in bar": "Mostrar insignia de espera en la barra",
   "Agent alerts in dynamic island": "Alertas de agente en la isla dinámica",
   "Popup sessions": "Sesiones en el popup",
-  "Add the OpenCode widget from Settings → Bar to show it in the bar.": "Añade el widget de OpenCode desde Ajustes → Barra para mostrarlo en la barra."
+  "Add the OpenCode widget from Settings → Bar to show it in the bar.": "Añade el widget de OpenCode desde Ajustes → Barra para mostrarlo en la barra.",
+  "Modern": "Moderno"
 }
