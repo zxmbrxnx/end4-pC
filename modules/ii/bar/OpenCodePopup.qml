@@ -20,7 +20,7 @@ StyledPopup {
     function formatTime(stamp) {
         if (!stamp) return "";
         const seconds = Math.max(0, Math.floor((Date.now() - stamp) / 1000));
-        if (seconds < 60) return "now";
+        if (seconds < 60) return Translation.tr("now");
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes}m`;
         const hours = Math.floor(minutes / 60);
@@ -96,7 +96,7 @@ StyledPopup {
             }
 
             SmallAction {
-                label: "Open"
+                label: Translation.tr("Open")
                 bg: Appearance.colors.colPrimary
                 fg: Appearance.colors.colOnPrimary
                 onActivated: {
@@ -172,7 +172,7 @@ StyledPopup {
 
                             StyledText {
                                 Layout.fillWidth: true
-                                text: sessionRow.modelData.title || "Untitled session"
+                                text: sessionRow.modelData.title || Translation.tr("Untitled session")
                                 elide: Text.ElideRight
                                 maximumLineCount: 1
                                 font.pixelSize: Appearance.font.pixelSize.small
@@ -209,7 +209,7 @@ StyledPopup {
             StyledText {
                 Layout.fillWidth: true
                 visible: OpenCode.connected && OpenCode.sortedSessions.length === 0
-                text: "No sessions yet"
+                text: Translation.tr("No sessions yet")
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 color: Appearance.colors.colSubtext
@@ -249,7 +249,7 @@ StyledPopup {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: `${permissionRow.modelData.action || "Permission"} · ${permissionRow.modelData.sessionTitle || ""}`
+                            text: `${permissionRow.modelData.action || Translation.tr("Permission")} · ${permissionRow.modelData.sessionTitle || ""}`
                             elide: Text.ElideRight
                             maximumLineCount: 1
                             font.pixelSize: Appearance.font.pixelSize.smaller
@@ -274,7 +274,7 @@ StyledPopup {
                             }
 
                             SmallAction {
-                                label: "Once"
+                                label: Translation.tr("Once")
                                 bg: Appearance.colors.colPrimary
                                 fg: Appearance.colors.colOnPrimary
                                 onActivated: {
@@ -288,7 +288,7 @@ StyledPopup {
                             }
 
                             SmallAction {
-                                label: "Reject"
+                                label: Translation.tr("Reject")
                                 bg: Appearance.colors.colErrorContainer
                                 fg: Appearance.colors.colOnErrorContainer
                                 onActivated: {
@@ -319,7 +319,7 @@ StyledPopup {
             spacing: 6
 
             SmallAction {
-                label: "Open"
+                label: Translation.tr("Open")
                 bg: Appearance.colors.colPrimary
                 fg: Appearance.colors.colOnPrimary
                 onActivated: {
@@ -329,7 +329,7 @@ StyledPopup {
             }
 
             SmallAction {
-                label: "Retry"
+                label: Translation.tr("Retry")
                 bg: Appearance.colors.colSecondaryContainer
                 fg: Appearance.colors.colOnSecondaryContainer
                 onActivated: {

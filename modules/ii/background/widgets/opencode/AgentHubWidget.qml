@@ -147,7 +147,7 @@ AbstractBackgroundWidget {
     function sendAskPrompt() {
         const target = root.askSession;
         if (!target) {
-            OpenCode.lastActionError = "No OpenCode session available";
+            OpenCode.lastActionError = Translation.tr("No OpenCode session available");
             return;
         }
         if (!OpenCode.connected) {
@@ -173,9 +173,9 @@ AbstractBackgroundWidget {
     }
 
     function statusSummary() {
-        if (OpenCode.waitingCount > 0) return `${OpenCode.waitingCount} waiting`;
-        if (OpenCode.workingCount > 0) return `${OpenCode.workingCount} working`;
-        if (OpenCode.effectiveState === "connected") return "Idle";
+        if (OpenCode.waitingCount > 0) return Translation.tr("%1 waiting").arg(OpenCode.waitingCount);
+        if (OpenCode.workingCount > 0) return Translation.tr("%1 working").arg(OpenCode.workingCount);
+        if (OpenCode.effectiveState === "connected") return Translation.tr("Idle");
         return OpenCode.statusText;
     }
 
@@ -194,7 +194,7 @@ AbstractBackgroundWidget {
         if (OpenCode.lastActionError.length > 0) return OpenCode.lastActionError;
         if (!OpenCode.connected && OpenCode.lastBridgeError.length > 0) return OpenCode.lastBridgeError;
         if (!OpenCode.connected) return OpenCode.statusText;
-        return `${root.sessionCount} sessions · ${OpenCode.pendingCount} pending`;
+        return Translation.tr("%1 sessions · %2 pending").arg(root.sessionCount).arg(OpenCode.pendingCount);
     }
 
     function emptyIcon() {
@@ -210,28 +210,28 @@ AbstractBackgroundWidget {
 
     function emptyTitle() {
         if (!OpenCode.connected) {
-            if (OpenCode.effectiveState === "not_installed") return "OpenCode is not installed";
-            if (OpenCode.effectiveState === "starting") return "Connecting to OpenCode";
-            if (OpenCode.effectiveState === "reconnecting") return "Reconnecting to OpenCode";
-            if (OpenCode.effectiveState === "incompatible") return "OpenCode version not supported";
-            return "OpenCode is not open";
+            if (OpenCode.effectiveState === "not_installed") return Translation.tr("OpenCode is not installed");
+            if (OpenCode.effectiveState === "starting") return Translation.tr("Connecting to OpenCode");
+            if (OpenCode.effectiveState === "reconnecting") return Translation.tr("Reconnecting to OpenCode");
+            if (OpenCode.effectiveState === "incompatible") return Translation.tr("OpenCode version not supported");
+            return Translation.tr("OpenCode is not open");
         }
-        return "No sessions";
+        return Translation.tr("No sessions");
     }
 
     function emptyBody() {
         if (!OpenCode.connected) {
-            if (OpenCode.effectiveState === "not_running") return "Open it to see your agent sessions.";
+            if (OpenCode.effectiveState === "not_running") return Translation.tr("Open it to see your agent sessions.");
             if (OpenCode.effectiveState === "starting"
-                || OpenCode.effectiveState === "reconnecting") return "The widget will reconnect automatically.";
+                || OpenCode.effectiveState === "reconnecting") return Translation.tr("The widget will reconnect automatically.");
             return OpenCode.lastBridgeError || "";
         }
-        return "Start a session in the terminal and it will appear here.";
+        return Translation.tr("Start a session in the terminal and it will appear here.");
     }
 
     function emptyActionText() {
-        if (!OpenCode.connected && OpenCode.effectiveState === "not_running") return "Open OpenCode";
-        if (OpenCode.connected) return "New session";
+        if (!OpenCode.connected && OpenCode.effectiveState === "not_running") return Translation.tr("Open OpenCode");
+        if (OpenCode.connected) return Translation.tr("New session");
         return "";
     }
 
@@ -419,7 +419,7 @@ AbstractBackgroundWidget {
                 spacing: 4
 
                 HubTab {
-                    label: "Sessions"
+                    label: Translation.tr("Sessions")
                     iconName: "forum"
                     count: root.sessionCount
                     selected: root.pageIndex === 0
@@ -427,7 +427,7 @@ AbstractBackgroundWidget {
                 }
 
                 HubTab {
-                    label: "Attention"
+                    label: Translation.tr("Attention")
                     iconName: "notification_important"
                     count: OpenCode.pendingCount
                     urgent: OpenCode.pendingCount > 0
@@ -436,7 +436,7 @@ AbstractBackgroundWidget {
                 }
 
                 HubTab {
-                    label: "Ask"
+                    label: Translation.tr("Ask")
                     iconName: "edit_note"
                     selected: root.pageIndex === 2
                     onActivated: {
@@ -492,8 +492,8 @@ AbstractBackgroundWidget {
                                 StyledText {
                                     Layout.fillWidth: true
                                     text: OpenCode.effectiveState === "reconnecting"
-                                        ? "Reconnecting to OpenCode…"
-                                        : "OpenCode is not running"
+                                        ? Translation.tr("Reconnecting to OpenCode…")
+                                        : Translation.tr("OpenCode is not running")
                                     elide: Text.ElideRight
                                     font.pixelSize: Appearance.font.pixelSize.smaller
                                     color: Appearance.colors.colOnTertiaryContainer
@@ -584,9 +584,9 @@ AbstractBackgroundWidget {
                                 anchors.fill: parent
                                 visible: permissionList.count === 0 && OpenCode.forms.length === 0
                                 icon: "task_alt"
-                                title: "No pending approvals"
+                                title: Translation.tr("No pending approvals")
                                 body: OpenCode.connected
-                                    ? "Permissions requested by an agent will appear here."
+                                    ? Translation.tr("Permissions requested by an agent will appear here.")
                                     : ""
                             }
                         }
@@ -615,7 +615,7 @@ AbstractBackgroundWidget {
 
                                 StyledText {
                                     Layout.fillWidth: true
-                                    text: `${OpenCode.forms.length} form(s) need input`
+                                    text: Translation.tr("%1 form(s) need input").arg(OpenCode.forms.length)
                                     elide: Text.ElideRight
                                     font.pixelSize: Appearance.font.pixelSize.smaller
                                     color: Appearance.colors.colOnSecondaryContainer
@@ -634,7 +634,7 @@ AbstractBackgroundWidget {
                                     }
 
                                     contentItem: StyledText {
-                                        text: "Open"
+                                        text: Translation.tr("Open")
                                         horizontalAlignment: Text.AlignHCenter
                                         font.pixelSize: Appearance.font.pixelSize.smaller
                                         font.weight: Font.Medium
@@ -700,7 +700,7 @@ AbstractBackgroundWidget {
                                 anchors.fill: parent
                                 anchors.margins: 8
                                 background: null
-                                placeholderText: "Ask this session…"
+                                placeholderText: Translation.tr("Ask this session…")
                                 wrapMode: TextArea.Wrap
                                 enabled: !OpenCode.actionBusy
                                 onActiveFocusChanged: {
@@ -742,25 +742,25 @@ AbstractBackgroundWidget {
                             visible: OpenCode.sortedSessions.length > 0
 
                             PromptTemplate {
-                                label: "Explain"
+                                label: Translation.tr("Explain")
                                 onActivated: {
-                                    askInput.text = "Explain the current changes and any risks.";
+                                    askInput.text = Translation.tr("Explain the current changes and any risks.");
                                     root.focusAskInput();
                                 }
                             }
 
                             PromptTemplate {
-                                label: "Fix"
+                                label: Translation.tr("Fix")
                                 onActivated: {
-                                    askInput.text = "Find and fix the current errors, then summarize the changes.";
+                                    askInput.text = Translation.tr("Find and fix the current errors, then summarize the changes.");
                                     root.focusAskInput();
                                 }
                             }
 
                             PromptTemplate {
-                                label: "Tests"
+                                label: Translation.tr("Tests")
                                 onActivated: {
-                                    askInput.text = "Run the relevant tests and fix any failures.";
+                                    askInput.text = Translation.tr("Run the relevant tests and fix any failures.");
                                     root.focusAskInput();
                                 }
                             }
@@ -788,7 +788,7 @@ AbstractBackgroundWidget {
 
                                 contentItem: StyledText {
                                     id: askModeLabel
-                                    text: root.askAgent === "plan" ? "Plan" : "Build"
+                                    text: root.askAgent === "plan" ? Translation.tr("Plan") : Translation.tr("Build")
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     font.pixelSize: Appearance.font.pixelSize.small
@@ -819,7 +819,7 @@ AbstractBackgroundWidget {
                                 onClicked: root.sendAskPrompt()
 
                                 contentItem: StyledText {
-                                    text: root.askSending ? "Sending…" : "Send"
+                                    text: root.askSending ? Translation.tr("Sending…") : Translation.tr("Send")
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     font.pixelSize: Appearance.font.pixelSize.small

@@ -80,7 +80,7 @@ ContentPage {
                         onClicked: OpenCode.openOpenCode()
 
                         contentItem: StyledText {
-                            text: "Open"
+                            text: Translation.tr("Open")
                             horizontalAlignment: Text.AlignHCenter
                             font.pixelSize: Appearance.font.pixelSize.small
                             font.weight: Font.Medium
@@ -99,7 +99,7 @@ ContentPage {
                         onClicked: OpenCode.retryNow()
 
                         contentItem: StyledText {
-                            text: "Retry"
+                            text: Translation.tr("Retry")
                             horizontalAlignment: Text.AlignHCenter
                             font.pixelSize: Appearance.font.pixelSize.small
                             font.weight: Font.Medium
@@ -123,7 +123,7 @@ ContentPage {
                     onClicked: OpenCode.startService()
 
                     contentItem: StyledText {
-                        text: "Start service"
+                        text: Translation.tr("Start service")
                         horizontalAlignment: Text.AlignHCenter
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.Medium
@@ -147,40 +147,40 @@ ContentPage {
         ContentSection {
             icon: "widgets"
             shape: MaterialShape.Shape.Puffy
-            title: "Desktop widget"
+            title: Translation.tr("Desktop widget")
 
             GroupedList {
                 ConfigSwitch {
                     buttonIcon: "toggle_on"
-                    text: "Show OpenCode widget"
+                    text: Translation.tr("Show OpenCode widget")
                     checked: Config.options.background.widgets.opencodeHub.enable
                     onCheckedChanged: Config.options.background.widgets.opencodeHub.enable = checked
                 }
 
                 ConfigSwitch {
                     buttonIcon: "payments"
-                    text: "Show session cost"
+                    text: Translation.tr("Show session cost")
                     checked: Config.options.background.widgets.opencodeHub.showCost
                     onCheckedChanged: Config.options.background.widgets.opencodeHub.showCost = checked
                 }
 
                 ConfigSwitch {
                     buttonIcon: "folder"
-                    text: "Show project name"
+                    text: Translation.tr("Show project name")
                     checked: Config.options.background.widgets.opencodeHub.showProject
                     onCheckedChanged: Config.options.background.widgets.opencodeHub.showProject = checked
                 }
 
                 ConfigSwitch {
                     buttonIcon: "visibility_off"
-                    text: "Privacy mode"
+                    text: Translation.tr("Privacy mode")
                     checked: Config.options.background.widgets.opencodeHub.privacyMode
                     onCheckedChanged: Config.options.background.widgets.opencodeHub.privacyMode = checked
                 }
 
                 ConfigSlider {
                     Layout.fillWidth: true
-                    text: "Widget width"
+                    text: Translation.tr("Widget width")
                     buttonIcon: "width"
                     value: Config.options.background.widgets.opencodeHub.width
                     from: 320
@@ -193,7 +193,7 @@ ContentPage {
 
                 ConfigSlider {
                     Layout.fillWidth: true
-                    text: "Widget height"
+                    text: Translation.tr("Widget height")
                     buttonIcon: "height"
                     value: Config.options.background.widgets.opencodeHub.height
                     from: 280
@@ -217,7 +217,7 @@ ContentPage {
                     }
 
                     contentItem: StyledText {
-                        text: "Reset size"
+                        text: Translation.tr("Reset size")
                         horizontalAlignment: Text.AlignHCenter
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.Medium
@@ -226,13 +226,13 @@ ContentPage {
                 }
 
                 ConfigSelectionArray {
-                    text: "Default tab"
+                    text: Translation.tr("Default tab")
                     icon: "tab"
                     currentValue: Config.options.background.widgets.opencodeHub.defaultPage
                     options: [
-                        { displayName: "Sessions", icon: "forum", value: "sessions" },
-                        { displayName: "Attention", icon: "notification_important", value: "attention" },
-                        { displayName: "Ask", icon: "edit_note", value: "ask" }
+                        { displayName: Translation.tr("Sessions"), icon: "forum", value: "sessions" },
+                        { displayName: Translation.tr("Attention"), icon: "notification_important", value: "attention" },
+                        { displayName: Translation.tr("Ask"), icon: "edit_note", value: "ask" }
                     ]
                     onSelected: newValue => Config.options.background.widgets.opencodeHub.defaultPage = newValue
                 }
@@ -242,8 +242,8 @@ ContentPage {
                 Layout.fillWidth: true
                 Layout.leftMargin: 8
                 Layout.rightMargin: 8
-                text: "You can also drag the bottom-right corner of the widget to resize it.\n"
-                    + "Launcher: /ask &lt;prompt&gt; sends to the default session."
+                text: Translation.tr("You can also drag the bottom-right corner of the widget to resize it.\n"
+                    + "Launcher: /ask &lt;prompt&gt; sends to the default session.")
                 wrapMode: Text.Wrap
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 color: Appearance.colors.colSubtext
@@ -253,33 +253,33 @@ ContentPage {
         ContentSection {
             icon: "toast"
             shape: MaterialShape.Shape.Bun
-            title: "Bar & alerts"
+            title: Translation.tr("Bar & alerts")
 
             GroupedList {
                 ConfigSwitch {
                     buttonIcon: "tag"
-                    text: "Show active count in bar"
+                    text: Translation.tr("Show active count in bar")
                     checked: Config.options.bar.opencode.showCount
                     onCheckedChanged: Config.options.bar.opencode.showCount = checked
                 }
 
                 ConfigSwitch {
                     buttonIcon: "notification_important"
-                    text: "Show waiting badge in bar"
+                    text: Translation.tr("Show waiting badge in bar")
                     checked: Config.options.bar.opencode.showWaiting
                     onCheckedChanged: Config.options.bar.opencode.showWaiting = checked
                 }
 
                 ConfigSwitch {
                     buttonIcon: "nest_wifi_pro"
-                    text: "Agent alerts in dynamic island"
+                    text: Translation.tr("Agent alerts in dynamic island")
                     checked: Config.options.bar.opencode.dynamicIslandAlerts
                     onCheckedChanged: Config.options.bar.opencode.dynamicIslandAlerts = checked
                 }
 
                 ConfigSlider {
                     Layout.fillWidth: true
-                    text: "Popup sessions"
+                    text: Translation.tr("Popup sessions")
                     buttonIcon: "format_list_numbered"
                     value: Config.options.bar.opencode.popupSessionLimit
                     from: 2
@@ -295,7 +295,7 @@ ContentPage {
                 Layout.fillWidth: true
                 Layout.leftMargin: 8
                 Layout.rightMargin: 8
-                text: "Add the OpenCode widget from Settings → Bar to show it in the bar."
+                text: Translation.tr("Add the OpenCode widget from Settings → Bar to show it in the bar.")
                 wrapMode: Text.Wrap
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 color: Appearance.colors.colSubtext
