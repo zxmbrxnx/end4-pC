@@ -44,19 +44,6 @@ AbstractBackgroundWidget {
         return root.clampSize(Math.round(value / 20) * 20, minimum, maximum);
     }
 
-    function loadSizeFromConfig() {
-        root.widgetWidth = root.clampSize(
-            Number(root.configEntry.width ?? root.defaultWidth),
-            root.minWidgetWidth,
-            root.maxWidgetWidth
-        );
-        root.widgetHeight = root.clampSize(
-            Number(root.configEntry.height ?? root.defaultHeight),
-            root.minWidgetHeight,
-            root.maxWidgetHeight
-        );
-    }
-
     function commitSize() {
         root.widgetWidth = root.snapSize(root.widgetWidth, root.minWidgetWidth, root.maxWidgetWidth);
         root.widgetHeight = root.snapSize(root.widgetHeight, root.minWidgetHeight, root.maxWidgetHeight);
@@ -73,30 +60,31 @@ AbstractBackgroundWidget {
         onTriggered: root.resizing = false
     }
 
-    Connections {
-        target: Config.options.background.widgets.opencodeHub
+    Binding {
+        target: root
+        property: "widgetWidth"
+        value: root.clampSize(
+            Number(root.configEntry.width ?? root.defaultWidth),
+            root.minWidgetWidth,
+            root.maxWidgetWidth
+        )
+        when: !root.resizing
+        restoreMode: Binding.RestoreNone
+    }
 
-        function onWidthChanged() {
-            if (root.resizing) return;
-            root.widgetWidth = root.clampSize(
-                Number(root.configEntry.width ?? root.defaultWidth),
-                root.minWidgetWidth,
-                root.maxWidgetWidth
-            );
-        }
-
-        function onHeightChanged() {
-            if (root.resizing) return;
-            root.widgetHeight = root.clampSize(
-                Number(root.configEntry.height ?? root.defaultHeight),
-                root.minWidgetHeight,
-                root.maxWidgetHeight
-            );
-        }
+    Binding {
+        target: root
+        property: "widgetHeight"
+        value: root.clampSize(
+            Number(root.configEntry.height ?? root.defaultHeight),
+            root.minWidgetHeight,
+            root.maxWidgetHeight
+        )
+        when: !root.resizing
+        restoreMode: Binding.RestoreNone
     }
 
     Component.onCompleted: {
-        root.loadSizeFromConfig();
         root.pageIndex = root.configEntry.defaultPage === "attention" ? 1 : 0;
     }
 
@@ -116,11 +104,13 @@ AbstractBackgroundWidget {
         return Appearance.colors.colSubtext;
     }
 
-    function footerText() {
+    readonly property int sessionCount: OpenCode.rootSessions.length
+
+    readonly property string footerText: {
         if (OpenCode.lastActionError.length > 0) return OpenCode.lastActionError;
         if (!OpenCode.connected && OpenCode.lastBridgeError.length > 0) return OpenCode.lastBridgeError;
         if (!OpenCode.connected) return OpenCode.statusText;
-        return `${OpenCode.rootSessions.length} sessions · ${OpenCode.pendingCount} pending`;
+        return `${root.sessionCount} sessions · ${OpenCode.pendingCount} pending`;
     }
 
     function emptyIcon() {
@@ -337,7 +327,7 @@ AbstractBackgroundWidget {
                 HubTab {
                     label: "Sessions"
                     iconName: "forum"
-                    count: OpenCode.rootSessions.length
+                    count: root.sessionCount
                     selected: root.pageIndex === 0
                     onActivated: root.pageIndex = 0
                 }
@@ -557,7 +547,7 @@ AbstractBackgroundWidget {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.footerText()
+                    text: root.footerText
                     elide: Text.ElideRight
                     maximumLineCount: 1
                     font.pixelSize: Appearance.font.pixelSize.smaller

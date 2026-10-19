@@ -62,8 +62,8 @@ Singleton {
         return root.connectionState;
     }
 
-    readonly property var sessions: root.snapshot.sessions || []
-    readonly property var permissions: root.snapshot.permissions || []
+    readonly property var sessions: (root.snapshot.sessions || []).filter(session => !root.deletingSessions[session.id])
+    readonly property var permissions: (root.snapshot.permissions || []).filter(permission => !root.deletingSessions[permission.sessionID])
     readonly property var forms: root.snapshot.forms || []
     readonly property var stats: root.snapshot.stats || null
     readonly property var rootSessions: root.sessions.filter(s => !s.parentID)
@@ -102,6 +102,8 @@ Singleton {
     property var knownPermissionIDs: ({})
     property bool permissionBaselineReady: false
     property var previousSessionStatus: ({})
+    property var deletingSessions: ({})
+    property string pendingDeleteID: ""
 
     function sessionById(sessionID) {
         return root.sessions.find(s => s.id === sessionID) || null;
@@ -111,12 +113,22 @@ Singleton {
         return root.permissions.find(p => p.sessionID === sessionID) || null;
     }
 
+    function pruneDeletingSessions() {
+        if (Object.keys(root.deletingSessions).length === 0) return;
+        const stillPresent = {};
+        (root.snapshot.sessions || []).forEach(session => {
+            if (root.deletingSessions[session.id]) stillPresent[session.id] = true;
+        });
+        root.deletingSessions = stillPresent;
+    }
+
     function applySnapshot(text) {
         if (!text || text.trim().length === 0) return;
         try {
             const data = JSON.parse(text);
             if (!data || typeof data !== "object") return;
             root.snapshot = data;
+            root.pruneDeletingSessions();
             root.now = Date.now();
             root.processNotifications();
         } catch (error) {
@@ -246,7 +258,19 @@ Singleton {
     }
 
     function deleteSession(sessionID) {
-        return root.runAction(["delete", `/api/session/${sessionID}`]);
+        const hidden = Object.assign({}, root.deletingSessions);
+        hidden[sessionID] = true;
+        root.deletingSessions = hidden;
+        root.pendingDeleteID = sessionID;
+
+        const started = root.runAction(["delete", `/api/session/${sessionID}`]);
+        if (!started) {
+            const restored = Object.assign({}, root.deletingSessions);
+            delete restored[sessionID];
+            root.deletingSessions = restored;
+            root.pendingDeleteID = "";
+        }
+        return started;
     }
 
     function prompt(sessionID, text) {
@@ -332,8 +356,15 @@ Singleton {
             if (exitCode !== 0) {
                 root.lastActionError = (actionStderr.text || actionStdout.text || `opencode api exited with ${exitCode}`).trim();
                 console.warn("[OpenCode] Action failed:", root.lastActionError);
+                if (root.pendingDeleteID.length > 0) {
+                    const restored = Object.assign({}, root.deletingSessions);
+                    delete restored[root.pendingDeleteID];
+                    root.deletingSessions = restored;
+                    root.pendingDeleteID = "";
+                }
             } else {
                 root.lastActionError = "";
+                root.pendingDeleteID = "";
             }
         }
     }

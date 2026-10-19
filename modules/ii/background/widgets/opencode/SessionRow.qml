@@ -96,6 +96,8 @@ Rectangle {
         implicitWidth: 24
         implicitHeight: 24
         buttonRadius: 12
+        rippleEnabled: false
+        padding: 0
         colBackground: "transparent"
         colBackgroundHover: ColorUtils.transparentize(action.fgColor, 0.85)
         colRipple: ColorUtils.transparentize(action.fgColor, 0.7)
