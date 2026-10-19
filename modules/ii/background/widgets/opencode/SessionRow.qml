@@ -15,6 +15,16 @@ Rectangle {
 
     signal openRequested()
     signal interruptRequested()
+    signal deleteRequested()
+
+    property bool confirmDelete: false
+
+    Timer {
+        id: confirmDeleteTimer
+        interval: 3000
+        repeat: false
+        onTriggered: root.confirmDelete = false
+    }
 
     readonly property bool waiting: session.status === "waiting"
     readonly property bool working: session.status === "working"
@@ -191,27 +201,65 @@ Rectangle {
                 color: root.secondary
             }
         }
+    }
+
+    Item {
+        id: actionsOverlay
+        anchors {
+            right: parent.right
+            verticalCenter: parent.verticalCenter
+            rightMargin: 6
+        }
+        width: actionsRow.implicitWidth + 8
+        height: 30
+        z: 2
+        opacity: rowArea.containsMouse || root.confirmDelete ? 1 : 0
+        visible: opacity > 0
+        enabled: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: 120 } }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 15
+            color: root.color
+            opacity: 0.97
+        }
 
         RowLayout {
-            Layout.alignment: Qt.AlignVCenter
-            spacing: 2
+            id: actionsRow
+            anchors.centerIn: parent
+            spacing: 1
 
             RowAction {
                 iconName: "terminal"
                 fgColor: root.foreground
-                opacity: rowArea.containsMouse ? 1 : 0
-                enabled: opacity > 0
-                Behavior on opacity { NumberAnimation { duration: 120 } }
                 onActivated: root.openRequested()
             }
 
             RowAction {
                 iconName: "stop_circle"
                 fgColor: Appearance.colors.colError
-                opacity: root.working && rowArea.containsMouse ? 1 : 0
-                enabled: opacity > 0
-                Behavior on opacity { NumberAnimation { duration: 120 } }
+                visible: root.working
                 onActivated: root.interruptRequested()
+            }
+
+            RowAction {
+                iconName: root.confirmDelete ? "delete_forever" : "delete"
+                fgColor: Appearance.colors.colError
+                onActivated: {
+                    if (root.confirmDelete) {
+                        root.confirmDelete = false;
+                        confirmDeleteTimer.stop();
+                        root.deleteRequested();
+                    } else {
+                        root.confirmDelete = true;
+                        confirmDeleteTimer.restart();
+                    }
+                }
+
+                StyledToolTip {
+                    text: root.confirmDelete ? "Click again to delete" : "Delete session"
+                }
             }
         }
     }

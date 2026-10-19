@@ -245,6 +245,10 @@ Singleton {
         return root.runAction(["post", `/api/session/${sessionID}/compact`]);
     }
 
+    function deleteSession(sessionID) {
+        return root.runAction(["delete", `/api/session/${sessionID}`]);
+    }
+
     function prompt(sessionID, text) {
         if (!text || text.trim().length === 0) return false;
         return root.runAction([

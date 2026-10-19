@@ -359,6 +359,7 @@ AbstractBackgroundWidget {
 
                                     onOpenRequested: OpenCode.openSession(modelData.id, modelData.directory)
                                     onInterruptRequested: OpenCode.interrupt(modelData.id)
+                                    onDeleteRequested: OpenCode.deleteSession(modelData.id)
                                 }
                             }
 
