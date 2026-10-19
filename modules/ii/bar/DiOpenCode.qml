@@ -15,15 +15,15 @@ Item {
     readonly property string kind: root.di ? root.di.openCodeAlertKind : ""
 
     readonly property string title: {
-        if (kind === "permission") return "Permission needed";
-        if (kind === "error") return "Session failed";
-        return "Session finished";
+        if (kind === "permission") return Translation.tr("Permission needed");
+        if (kind === "error") return Translation.tr("Session failed");
+        return Translation.tr("Session finished");
     }
 
     readonly property string body: {
         if (kind === "permission") {
             if (!permission) return "";
-            const action = permission.action || "Permission";
+            const action = permission.action || Translation.tr("Permission");
             const resources = (permission.resources || []).join(" ");
             return `${action} · ${resources}`;
         }

@@ -89,15 +89,15 @@ Singleton {
     readonly property var defaultSession: root.sortedSessions.length > 0 ? root.sortedSessions[0] : null
 
     readonly property string statusText: {
-        if (root.effectiveState === "not_installed") return "OpenCode is not installed";
-        if (root.effectiveState === "not_running") return "OpenCode is not running";
-        if (root.effectiveState === "starting") return "Connecting to OpenCode…";
-        if (root.effectiveState === "incompatible") return "OpenCode version is not supported";
-        if (root.effectiveState === "reconnecting") return "Reconnecting to OpenCode…";
-        if (root.effectiveState === "error") return "OpenCode connection error";
-        if (root.waitingCount > 0) return `${root.waitingCount} waiting for you`;
-        if (root.workingCount > 0) return `${root.workingCount} working`;
-        return "OpenCode is ready";
+        if (root.effectiveState === "not_installed") return Translation.tr("OpenCode is not installed");
+        if (root.effectiveState === "not_running") return Translation.tr("OpenCode is not running");
+        if (root.effectiveState === "starting") return Translation.tr("Connecting to OpenCode…");
+        if (root.effectiveState === "incompatible") return Translation.tr("OpenCode version is not supported");
+        if (root.effectiveState === "reconnecting") return Translation.tr("Reconnecting to OpenCode…");
+        if (root.effectiveState === "error") return Translation.tr("OpenCode connection error");
+        if (root.waitingCount > 0) return Translation.tr("%1 waiting for you").arg(root.waitingCount);
+        if (root.workingCount > 0) return Translation.tr("%1 working").arg(root.workingCount);
+        return Translation.tr("OpenCode is ready");
     }
 
     signal permissionRequested(var permission)
@@ -168,16 +168,16 @@ Singleton {
         const first = permissions[0];
         const resources = (first.resources || []).join(" ").replace(/[<>&]/g, "");
         const title = permissions.length === 1
-            ? "OpenCode · permission needed"
-            : `OpenCode · ${permissions.length} permissions needed`;
-        const body = `${first.sessionTitle || "Session"}: ${first.action || "action"} ${resources}`.slice(0, 240);
+            ? Translation.tr("OpenCode · permission needed")
+            : Translation.tr("OpenCode · %1 permissions needed").arg(permissions.length);
+        const body = `${first.sessionTitle || Translation.tr("Session")}: ${first.action || Translation.tr("action")} ${resources}`.slice(0, 240);
         Quickshell.execDetached(["notify-send", "-a", "opencode", "-u", "critical", "-i", "utilities-terminal", title, body]);
     }
 
     function notifyFinished(session) {
         const cost = typeof session.cost === "number" ? ` · $${session.cost.toFixed(3)}` : "";
-        const title = session.status === "error" ? "OpenCode · session failed" : "OpenCode · session finished";
-        const body = `${session.title || "Session"}${cost}`;
+        const title = session.status === "error" ? Translation.tr("OpenCode · session failed") : Translation.tr("OpenCode · session finished");
+        const body = `${session.title || Translation.tr("Session")}${cost}`;
         const urgency = session.status === "error" ? "critical" : "normal";
         Quickshell.execDetached(["notify-send", "-a", "opencode", "-u", urgency, "-i", "utilities-terminal", title, body]);
     }
@@ -204,7 +204,9 @@ Singleton {
 
     function openTerminalCommand(args) {
         const terminal = Config.options.apps.terminal || "kitty -1";
-        const wrapper = `opencode "$@"; code=$?; if [ $code -ne 0 ]; then printf "\\n[opencode] exited with code %s\\n" "$code"; read -r -p "Press Enter to close..." _; fi`;
+        const exitLabel = root.shellQuote(Translation.tr("[opencode] exited with code"));
+        const closePrompt = root.shellQuote(Translation.tr("Press Enter to close..."));
+        const wrapper = `opencode "$@"; code=$?; if [ $code -ne 0 ]; then printf "\\n%s %s\\n" ${exitLabel} "$code"; read -r -p ${closePrompt} _; fi`;
         const quotedArgs = args.map(value => root.shellQuote(value)).join(" ");
         Quickshell.execDetached(["bash", "-c", `${terminal} bash -c ${root.shellQuote(wrapper)} opencode ${quotedArgs}`]);
     }
@@ -225,7 +227,7 @@ Singleton {
 
     function runAction(args, kind) {
         if (root.actionBusy) {
-            root.lastActionError = "Another OpenCode action is still running";
+            root.lastActionError = Translation.tr("Another OpenCode action is still running");
             return false;
         }
         actionProcess.command = ["opencode", "api", ...args];
@@ -283,20 +285,20 @@ Singleton {
     function promptDefault(text, sessionID, agent) {
         const trimmed = String(text || "").trim();
         if (trimmed.length === 0) {
-            root.lastActionError = "Write a prompt first";
+            root.lastActionError = Translation.tr("Write a prompt first");
             return false;
         }
         const session = sessionID ? root.sessionById(sessionID) : root.defaultSession;
         if (!session) {
-            root.lastActionError = sessionID ? "OpenCode session not found" : "No OpenCode session available";
+            root.lastActionError = sessionID ? Translation.tr("OpenCode session not found") : Translation.tr("No OpenCode session available");
             return false;
         }
         if (agent && agent !== "plan" && agent !== "build") {
-            root.lastActionError = `Invalid OpenCode agent: ${agent}`;
+            root.lastActionError = Translation.tr("Invalid OpenCode agent: %1").arg(agent);
             return false;
         }
         if (root.actionBusy) {
-            root.lastActionError = "Another OpenCode action is still running";
+            root.lastActionError = Translation.tr("Another OpenCode action is still running");
             return false;
         }
         if (agent && agent !== session.agent) {
@@ -411,11 +413,11 @@ Singleton {
                         if (session && session.id) {
                             root.sessionCreated(session.id);
                         } else {
-                            root.lastActionError = "OpenCode did not return a new session";
+                            root.lastActionError = Translation.tr("OpenCode did not return a new session");
                             root.sessionCreateFailed(root.lastActionError);
                         }
                     } catch (error) {
-                        root.lastActionError = `Invalid OpenCode session response: ${error}`;
+                        root.lastActionError = Translation.tr("Invalid OpenCode session response: %1").arg(error);
                         root.sessionCreateFailed(root.lastActionError);
                     }
                 }

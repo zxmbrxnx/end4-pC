@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
+import qs.services
 
 Rectangle {
     id: root
@@ -73,7 +74,7 @@ Rectangle {
         const stamp = root.session.updated || root.session.created || 0;
         if (!stamp) return "";
         const seconds = Math.max(0, Math.floor((root.now - stamp) / 1000));
-        if (seconds < 60) return "now";
+        if (seconds < 60) return Translation.tr("now");
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes}m`;
         const hours = Math.floor(minutes / 60);
@@ -157,7 +158,7 @@ Rectangle {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.privacyMode ? "Session" : (root.session.title || "Untitled session")
+                    text: root.privacyMode ? Translation.tr("Session") : (root.session.title || Translation.tr("Untitled session"))
                     elide: Text.ElideRight
                     maximumLineCount: 1
                     font.pixelSize: Appearance.font.pixelSize.normal
@@ -245,7 +246,7 @@ Rectangle {
                     onActivated: root.askRequested()
 
                     StyledToolTip {
-                        text: "Ask this session"
+                        text: Translation.tr("Ask this session")
                     }
                 }
 
@@ -277,7 +278,7 @@ Rectangle {
                     }
 
                     StyledToolTip {
-                        text: root.confirmDelete ? "Click again to delete" : "Delete session"
+                        text: root.confirmDelete ? Translation.tr("Click again to delete") : Translation.tr("Delete session")
                     }
                 }
             }
