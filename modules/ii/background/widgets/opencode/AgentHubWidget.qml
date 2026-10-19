@@ -44,6 +44,19 @@ AbstractBackgroundWidget {
         return root.clampSize(Math.round(value / 20) * 20, minimum, maximum);
     }
 
+    function loadSizeFromConfig() {
+        root.widgetWidth = root.clampSize(
+            Number(root.configEntry.width ?? root.defaultWidth),
+            root.minWidgetWidth,
+            root.maxWidgetWidth
+        );
+        root.widgetHeight = root.clampSize(
+            Number(root.configEntry.height ?? root.defaultHeight),
+            root.minWidgetHeight,
+            root.maxWidgetHeight
+        );
+    }
+
     function commitSize() {
         root.widgetWidth = root.snapSize(root.widgetWidth, root.minWidgetWidth, root.maxWidgetWidth);
         root.widgetHeight = root.snapSize(root.widgetHeight, root.minWidgetHeight, root.maxWidgetHeight);
@@ -60,31 +73,38 @@ AbstractBackgroundWidget {
         onTriggered: root.resizing = false
     }
 
-    Binding {
-        target: root
-        property: "widgetWidth"
-        value: root.clampSize(
-            Number(root.configEntry.width ?? root.defaultWidth),
-            root.minWidgetWidth,
-            root.maxWidgetWidth
-        )
-        when: !root.resizing
-        restoreMode: Binding.RestoreNone
+    Connections {
+        target: Config.options.background.widgets.opencodeHub
+
+        function onWidthChanged() {
+            if (root.resizing) return;
+            root.widgetWidth = root.clampSize(
+                Number(root.configEntry.width ?? root.defaultWidth),
+                root.minWidgetWidth,
+                root.maxWidgetWidth
+            );
+        }
+
+        function onHeightChanged() {
+            if (root.resizing) return;
+            root.widgetHeight = root.clampSize(
+                Number(root.configEntry.height ?? root.defaultHeight),
+                root.minWidgetHeight,
+                root.maxWidgetHeight
+            );
+        }
     }
 
-    Binding {
-        target: root
-        property: "widgetHeight"
-        value: root.clampSize(
-            Number(root.configEntry.height ?? root.defaultHeight),
-            root.minWidgetHeight,
-            root.maxWidgetHeight
-        )
-        when: !root.resizing
-        restoreMode: Binding.RestoreNone
+    Connections {
+        target: Config
+
+        function onReadyChanged() {
+            if (Config.ready) root.loadSizeFromConfig();
+        }
     }
 
     Component.onCompleted: {
+        root.loadSizeFromConfig();
         root.pageIndex = root.configEntry.defaultPage === "attention" ? 1 : 0;
     }
 
