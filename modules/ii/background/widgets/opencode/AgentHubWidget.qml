@@ -58,8 +58,10 @@ AbstractBackgroundWidget {
     }
 
     function commitSize() {
-        root.configEntry.width = Math.round(root.widgetWidth);
-        root.configEntry.height = Math.round(root.widgetHeight);
+        root.widgetWidth = root.snapSize(root.widgetWidth, root.minWidgetWidth, root.maxWidgetWidth);
+        root.widgetHeight = root.snapSize(root.widgetHeight, root.minWidgetHeight, root.maxWidgetHeight);
+        root.configEntry.width = root.widgetWidth;
+        root.configEntry.height = root.widgetHeight;
         root.resizeStartHeight = -1;
         resizeSettleTimer.restart();
     }
