@@ -68,13 +68,14 @@ Keep these changes small and isolated. Everything else should live in new files.
 | `modules/ii/settings/DashboardBarWidgets.qml` | bar widget entry |
 | `services/SettingsPages.qml` | settings page entry |
 | `translations/en_US.json`, `translations/es_ES.json` | optional new keys |
+| `.gitignore` | ignore Python cache files |
 
 New code lives in:
 
 ```text
 services/OpenCode.qml
-services/OpenCodeBridge.qml
 scripts/ai/opencode-bridge.py
+scripts/ai/opencode-mock-server.py
 modules/ii/background/widgets/opencode/
 modules/ii/bar/OpenCode.qml
 modules/ii/bar/OpenCodePopup.qml
