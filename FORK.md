@@ -78,7 +78,7 @@ services/OpenCode.qml
 scripts/ai/opencode-bridge.py
 scripts/ai/opencode-mock-server.py
 modules/ii/background/widgets/opencode/
-modules/ii/bar/OpenCode.qml
+modules/ii/bar/Opencode.qml
 modules/ii/bar/OpenCodePopup.qml
 modules/ii/bar/DiOpenCode.qml
 modules/ii/settings/pages/OpenCodeConfig.qml
