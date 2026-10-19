@@ -29,6 +29,7 @@ Item {
     readonly property real timerWidth: 130
     readonly property real osdWidth: 132
     readonly property real notificationWidth: 220
+    readonly property real openCodeWidth: 250
     readonly property real batteryWidth: 170
     readonly property real badgeSize: 32
     readonly property real badgeSpacing: 6
@@ -136,6 +137,51 @@ Item {
         onTriggered: root.batteryAlertActive = false
     }
 
+    property bool openCodeAlertActive: false
+    property string openCodeAlertKind: ""
+    property var openCodeAlertPermission: null
+    property var openCodeAlertSession: null
+
+    Timer {
+        id: openCodeAlertTimer
+        interval: root.openCodeAlertKind === "permission" ? 8000 : 4000
+        repeat: false
+        onTriggered: root.openCodeAlertActive = false
+    }
+
+    function showOpenCodeAlert(kind, payload) {
+        if (!Config.options.bar.opencode.dynamicIslandAlerts) return;
+        if (root.openCodeAlertActive && root.openCodeAlertKind === "permission" && kind !== "permission") return;
+        root.openCodeAlertKind = kind;
+        if (kind === "permission") {
+            root.openCodeAlertPermission = payload;
+            root.openCodeAlertSession = null;
+        } else {
+            root.openCodeAlertSession = payload;
+            root.openCodeAlertPermission = null;
+        }
+        root.openCodeAlertActive = true;
+        openCodeAlertTimer.restart();
+    }
+
+    function dismissOpenCodeAlert() {
+        root.openCodeAlertActive = false;
+        openCodeAlertTimer.stop();
+    }
+
+    Connections {
+        target: OpenCode
+
+        function onPendingCountChanged() {
+            if (OpenCode.pendingCount > 0 && OpenCode.permissions.length > 0)
+                root.showOpenCodeAlert("permission", OpenCode.permissions[0]);
+        }
+
+        function onSessionFinished(session) {
+            root.showOpenCodeAlert(session.status === "error" ? "error" : "finished", session);
+        }
+    }
+
     Timer {
         id: mediaTrackChangeTimer
         interval: 3000
@@ -199,9 +245,10 @@ Item {
         { id: "osd",          active: GlobalStates.osdVolumeOpen,       component: osdComponent,          width: root.osdWidth },
         { id: "media",        active: root.hasMedia,                    component: mediaComponent,        width: root.mediaWidth },
         { id: "session",      active: GlobalStates.diSessionOpen,       component: sessionComponent,      width: root.sessionWidth },
+        { id: "opencode",     active: root.openCodeAlertActive,         component: openCodeComponent,     width: root.openCodeWidth },
     ]
 
-    readonly property var alwaysWinIds: ["session", "notification", "battery", "osd"]
+    readonly property var alwaysWinIds: ["session", "notification", "battery", "osd", "opencode"]
 
     readonly property var activeOthers: root.contentProviders.filter(p => !root.alwaysWinIds.includes(p.id) && p.active)
 
@@ -223,6 +270,7 @@ Item {
     function iconForProviderId(id) {
         switch (id) {
             case "media":     return "music_note"
+            case "opencode":  return "smart_toy"
             case "recording": return "screen_record"
             case "timer":     return root.timerIcon()
             case "battery":   return root.batteryIcon()
@@ -337,6 +385,11 @@ Item {
         Component {
             id: sessionComponent
             DiSession { di: root }
+        }
+
+        Component {
+            id: openCodeComponent
+            DiOpenCode { di: root }
         }
 
         Component {
