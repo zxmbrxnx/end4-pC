@@ -44,7 +44,15 @@ Rectangle {
     radius: Appearance.rounding.normal
     color: root.waiting
         ? Appearance.colors.colTertiaryContainer
-        : (rowArea.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2)
+        : (rowHover.hovered || root.confirmDelete
+            ? Appearance.colors.colLayer2Hover
+            : Appearance.colors.colLayer2)
+
+    HoverHandler {
+        id: rowHover
+    }
+
+    readonly property alias hovered: rowHover.hovered
 
     function projectName() {
         if (!root.session.directory) return "";
@@ -85,9 +93,9 @@ Rectangle {
         property color fgColor
         signal activated()
 
-        implicitWidth: 26
-        implicitHeight: 26
-        buttonRadius: 13
+        implicitWidth: 24
+        implicitHeight: 24
+        buttonRadius: 12
         colBackground: "transparent"
         colBackgroundHover: ColorUtils.transparentize(action.fgColor, 0.85)
         colRipple: ColorUtils.transparentize(action.fgColor, 0.7)
@@ -96,7 +104,7 @@ Rectangle {
         contentItem: MaterialSymbol {
             anchors.centerIn: parent
             text: action.iconName
-            iconSize: 17
+            iconSize: 16
             color: action.hovered ? Appearance.colors.colPrimary : action.fgColor
         }
     }
@@ -183,82 +191,79 @@ Rectangle {
             }
         }
 
-        ColumnLayout {
+        Item {
+            id: trailingSlot
             Layout.alignment: Qt.AlignVCenter
-            spacing: 1
+            Layout.preferredWidth: 78
+            implicitHeight: 34
 
-            StyledText {
-                Layout.alignment: Qt.AlignRight
-                text: root.elapsedText()
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                color: root.secondary
-            }
+            ColumnLayout {
+                anchors {
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+                spacing: 1
+                opacity: rowHover.hovered || root.confirmDelete ? 0 : 1
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 80 } }
 
-            StyledText {
-                Layout.alignment: Qt.AlignRight
-                text: root.costText()
-                font.pixelSize: Appearance.font.pixelSize.smaller
-                color: root.secondary
-            }
-        }
-    }
-
-    Item {
-        id: actionsOverlay
-        anchors {
-            right: parent.right
-            verticalCenter: parent.verticalCenter
-            rightMargin: 6
-        }
-        width: actionsRow.implicitWidth + 8
-        height: 30
-        z: 2
-        opacity: rowArea.containsMouse || root.confirmDelete ? 1 : 0
-        visible: opacity > 0
-        enabled: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: 120 } }
-
-        Rectangle {
-            anchors.fill: parent
-            radius: 15
-            color: root.color
-            opacity: 0.97
-        }
-
-        RowLayout {
-            id: actionsRow
-            anchors.centerIn: parent
-            spacing: 1
-
-            RowAction {
-                iconName: "terminal"
-                fgColor: root.foreground
-                onActivated: root.openRequested()
-            }
-
-            RowAction {
-                iconName: "stop_circle"
-                fgColor: Appearance.colors.colError
-                visible: root.working
-                onActivated: root.interruptRequested()
-            }
-
-            RowAction {
-                iconName: root.confirmDelete ? "delete_forever" : "delete"
-                fgColor: Appearance.colors.colError
-                onActivated: {
-                    if (root.confirmDelete) {
-                        root.confirmDelete = false;
-                        confirmDeleteTimer.stop();
-                        root.deleteRequested();
-                    } else {
-                        root.confirmDelete = true;
-                        confirmDeleteTimer.restart();
-                    }
+                StyledText {
+                    Layout.alignment: Qt.AlignRight
+                    text: root.elapsedText()
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    color: root.secondary
                 }
 
-                StyledToolTip {
-                    text: root.confirmDelete ? "Click again to delete" : "Delete session"
+                StyledText {
+                    Layout.alignment: Qt.AlignRight
+                    text: root.costText()
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    color: root.secondary
+                }
+            }
+
+            RowLayout {
+                id: actionsRow
+                anchors {
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                }
+                spacing: 1
+                opacity: rowHover.hovered || root.confirmDelete ? 1 : 0
+                visible: opacity > 0
+                enabled: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 80 } }
+
+                RowAction {
+                    iconName: "terminal"
+                    fgColor: root.foreground
+                    onActivated: root.openRequested()
+                }
+
+                RowAction {
+                    iconName: "stop_circle"
+                    fgColor: Appearance.colors.colError
+                    visible: root.working
+                    onActivated: root.interruptRequested()
+                }
+
+                RowAction {
+                    iconName: root.confirmDelete ? "delete_forever" : "delete"
+                    fgColor: Appearance.colors.colError
+                    onActivated: {
+                        if (root.confirmDelete) {
+                            root.confirmDelete = false;
+                            confirmDeleteTimer.stop();
+                            root.deleteRequested();
+                        } else {
+                            root.confirmDelete = true;
+                            confirmDeleteTimer.restart();
+                        }
+                    }
+
+                    StyledToolTip {
+                        text: root.confirmDelete ? "Click again to delete" : "Delete session"
+                    }
                 }
             }
         }
