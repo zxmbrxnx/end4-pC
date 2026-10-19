@@ -47,20 +47,17 @@ AbstractBackgroundWidget {
         return Math.max(minimum, Math.min(maximum, value));
     }
 
+    function applyResize(dx, dy, startWidth) {
+        if (root.resizeStartHeight < 0)
+            root.resizeStartHeight = root.widgetHeight;
+        root.widgetWidth = root.clampSize(startWidth + dx, root.minWidgetWidth, root.maxWidgetWidth);
+        root.widgetHeight = root.clampSize(root.resizeStartHeight + dy, root.minWidgetHeight, root.maxWidgetHeight);
+    }
+
     function commitSize() {
         root.configEntry.width = Math.round(root.widgetWidth);
         root.configEntry.height = Math.round(root.widgetHeight);
         root.resizeStartHeight = -1;
-        root.widgetWidth = Qt.binding(() => root.clampSize(
-            Number(root.configEntry.width ?? root.defaultWidth),
-            root.minWidgetWidth,
-            root.maxWidgetWidth
-        ));
-        root.widgetHeight = Qt.binding(() => root.clampSize(
-            Number(root.configEntry.height ?? root.defaultHeight),
-            root.minWidgetHeight,
-            root.maxWidgetHeight
-        ));
     }
 
     Component.onCompleted: {
@@ -553,13 +550,7 @@ AbstractBackgroundWidget {
             currentWidth: root.widgetWidth
             resizeMode: "diagonal"
 
-            onResizedXY: (dx, dy, startWidth) => {
-                if (root.resizeStartHeight < 0)
-                    root.resizeStartHeight = root.widgetHeight;
-                root.widgetWidth = root.clampSize(startWidth + dx, root.minWidgetWidth, root.maxWidgetWidth);
-                root.widgetHeight = root.clampSize(root.resizeStartHeight + dy, root.minWidgetHeight, root.maxWidgetHeight);
-            }
-
+            onResizedXY: (dx, dy, startWidth) => root.applyResize(dx, dy, startWidth)
             onResizeFinished: root.commitSize()
         }
     }
