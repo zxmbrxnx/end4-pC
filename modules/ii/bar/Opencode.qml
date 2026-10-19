@@ -11,6 +11,7 @@ MouseArea {
     property bool contentColorOverridden: false
     property bool vertical: Config.options.bar.vertical
     property bool popupOpen: false
+    property var registeredPopupWindow: null
 
     readonly property bool waiting: Services.OpenCode.pendingCount > 0
         && Config.options.bar.opencode.showWaiting
@@ -73,7 +74,47 @@ MouseArea {
         }
     }
 
+    function registerPopupWindow() {
+        if (!root.popupOpen) return;
+        const window = openCodePopup.popupWindow;
+        if (!window || window === root.registeredPopupWindow) return;
+        if (root.registeredPopupWindow)
+            Services.GlobalFocusGrab.removeDismissable(root.registeredPopupWindow);
+        root.registeredPopupWindow = window;
+        if (root.popupOpen)
+            Services.GlobalFocusGrab.addDismissable(window);
+    }
+
+    onPopupOpenChanged: {
+        if (root.popupOpen) {
+            Qt.callLater(() => root.registerPopupWindow());
+        } else if (root.registeredPopupWindow) {
+            Services.GlobalFocusGrab.removeDismissable(root.registeredPopupWindow);
+            root.registeredPopupWindow = null;
+        }
+    }
+
+    Connections {
+        target: openCodePopup
+        function onPopupWindowChanged() {
+            if (root.popupOpen) root.registerPopupWindow();
+        }
+    }
+
+    Connections {
+        target: Services.GlobalFocusGrab
+        function onDismissed() {
+            if (root.popupOpen) root.popupOpen = false;
+        }
+    }
+
+    Component.onDestruction: {
+        if (root.registeredPopupWindow)
+            Services.GlobalFocusGrab.removeDismissable(root.registeredPopupWindow);
+    }
+
     OpenCodePopup {
+        id: openCodePopup
         hoverTarget: root
         hoverOpen: false
         pinned: root.popupOpen

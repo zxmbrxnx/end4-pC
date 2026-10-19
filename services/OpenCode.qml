@@ -45,6 +45,7 @@ Singleton {
     property string lastBridgeError: ""
     property string lastActionError: ""
     property bool actionBusy: false
+    property string actionKind: ""
     property var pendingPrompt: null
     property bool bridgeEnabled: true
     property bool shuttingDown: false
@@ -101,6 +102,9 @@ Singleton {
 
     signal permissionRequested(var permission)
     signal sessionFinished(var session)
+    signal promptCompleted(bool success, string error)
+    signal sessionCreated(string sessionID)
+    signal sessionCreateFailed(string error)
 
     property var knownPermissionIDs: ({})
     property bool permissionBaselineReady: false
@@ -215,12 +219,13 @@ Singleton {
         Quickshell.execDetached(["opencode", "service", "start"]);
     }
 
-    function runAction(args) {
+    function runAction(args, kind) {
         if (root.actionBusy) {
             root.lastActionError = "Another OpenCode action is still running";
             return false;
         }
         actionProcess.command = ["opencode", "api", ...args];
+        root.actionKind = kind || "action";
         root.actionBusy = true;
         root.lastActionError = "";
         actionProcess.running = true;
@@ -259,7 +264,16 @@ Singleton {
             `/api/session/${sessionID}/prompt`,
             "--data",
             JSON.stringify({ text: text })
-        ]);
+        ], "prompt");
+    }
+
+    function createSession() {
+        return root.runAction([
+            "post",
+            "/api/session",
+            "--data",
+            "{}"
+        ], "createSession");
     }
 
     function promptDefault(text, sessionID, agent) {
@@ -288,7 +302,7 @@ Singleton {
                 `/api/session/${session.id}/agent`,
                 "--data",
                 JSON.stringify({ agent: agent })
-            ])) {
+            ], "agentSwitch")) {
                 root.pendingPrompt = null;
                 return false;
             }
@@ -366,17 +380,40 @@ Singleton {
             id: actionStderr
         }
         onExited: (exitCode, exitStatus) => {
+            const kind = root.actionKind;
+            const pending = root.pendingPrompt;
+            const errorText = (actionStderr.text || actionStdout.text || `opencode api exited with ${exitCode}`).trim();
             root.actionBusy = false;
+            root.actionKind = "";
             if (exitCode !== 0) {
                 root.pendingPrompt = null;
-                root.lastActionError = (actionStderr.text || actionStdout.text || `opencode api exited with ${exitCode}`).trim();
+                root.lastActionError = errorText;
                 console.warn("[OpenCode] Action failed:", root.lastActionError);
+                if (kind === "prompt" || (kind === "agentSwitch" && pending))
+                    root.promptCompleted(false, root.lastActionError);
+                else if (kind === "createSession")
+                    root.sessionCreateFailed(root.lastActionError);
             } else {
                 root.lastActionError = "";
-                if (root.pendingPrompt) {
-                    const pending = root.pendingPrompt;
+                if (kind === "agentSwitch" && pending) {
                     root.pendingPrompt = null;
                     root.prompt(pending.sessionID, pending.text);
+                } else if (kind === "prompt") {
+                    root.promptCompleted(true, "");
+                } else if (kind === "createSession") {
+                    try {
+                        const payload = JSON.parse(actionStdout.text);
+                        const session = payload.data || payload;
+                        if (session && session.id) {
+                            root.sessionCreated(session.id);
+                        } else {
+                            root.lastActionError = "OpenCode did not return a new session";
+                            root.sessionCreateFailed(root.lastActionError);
+                        }
+                    } catch (error) {
+                        root.lastActionError = `Invalid OpenCode session response: ${error}`;
+                        root.sessionCreateFailed(root.lastActionError);
+                    }
                 }
             }
         }

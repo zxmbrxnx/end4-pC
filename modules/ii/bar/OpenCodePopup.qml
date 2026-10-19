@@ -3,11 +3,13 @@ import qs.modules.common.widgets
 import qs.services
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 StyledPopup {
     id: root
 
     signal performed()
+    readonly property var popupWindow: popupContent.QsWindow.window
 
     function projectName(directory) {
         if (!directory) return "";
@@ -55,6 +57,7 @@ StyledPopup {
     }
 
     ColumnLayout {
+        id: popupContent
         implicitWidth: 320
         spacing: 10
 
