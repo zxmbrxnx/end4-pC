@@ -43,6 +43,9 @@ AbstractBackgroundWidget {
     property string askSessionID: ""
     property string askAgent: "build"
     property bool askAgentTouched: false
+    property bool askSending: false
+    property bool creatingSession: false
+    property string pendingAskSessionID: ""
     readonly property var askSession: OpenCode.sessionById(root.askSessionID) || OpenCode.defaultSession
 
     onAskSessionIDChanged: {
@@ -59,6 +62,30 @@ AbstractBackgroundWidget {
         function onSnapshotChanged() {
             if (!root.askAgentTouched && root.askSessionID.length === 0)
                 root.syncAskAgent();
+            if (root.pendingAskSessionID.length > 0 && OpenCode.sessionById(root.pendingAskSessionID)) {
+                const sessionID = root.pendingAskSessionID;
+                root.pendingAskSessionID = "";
+                root.creatingSession = false;
+                root.openAskForSession(sessionID);
+            }
+        }
+        function onPromptCompleted(success, error) {
+            if (!root.askSending) return;
+            root.askSending = false;
+            if (success) {
+                askInput.text = "";
+                if (root.pageIndex === 2) root.pageIndex = 0;
+            } else if (root.pageIndex === 2) {
+                root.focusAskInput();
+            }
+        }
+        function onSessionCreated(sessionID) {
+            root.pendingAskSessionID = sessionID;
+            root.creatingSession = true;
+        }
+        function onSessionCreateFailed(error) {
+            root.pendingAskSessionID = "";
+            root.creatingSession = false;
         }
     }
 
@@ -101,6 +128,22 @@ AbstractBackgroundWidget {
         root.focusAskInput();
     }
 
+    function createNewSession() {
+        if (!OpenCode.connected) {
+            OpenCode.openOpenCode();
+            return;
+        }
+        if (OpenCode.createSession())
+            root.creatingSession = true;
+    }
+
+    function emptyAction() {
+        if (OpenCode.connected)
+            root.createNewSession();
+        else
+            OpenCode.openOpenCode();
+    }
+
     function sendAskPrompt() {
         const target = root.askSession;
         if (!target) {
@@ -112,10 +155,8 @@ AbstractBackgroundWidget {
             return;
         }
         if (OpenCode.actionBusy) return;
-        if (OpenCode.promptDefault(askInput.text, target.id, root.askAgent)) {
-            askInput.text = "";
-            root.pageIndex = 0;
-        }
+        if (OpenCode.promptDefault(askInput.text, target.id, root.askAgent))
+            root.askSending = true;
     }
 
     Component.onCompleted: {
@@ -495,11 +536,12 @@ AbstractBackgroundWidget {
                                 icon: root.emptyIcon()
                                 title: root.emptyTitle()
                                 body: root.emptyBody()
-                                actionText: root.emptyActionText()
+                                actionText: root.creatingSession ? "" : root.emptyActionText()
                                 actionIcon: "terminal"
                                 busy: OpenCode.effectiveState === "starting"
                                     || OpenCode.effectiveState === "reconnecting"
-                                onActionClicked: OpenCode.openOpenCode()
+                                    || root.creatingSession
+                                onActionClicked: root.emptyAction()
                             }
                         }
 
@@ -685,11 +727,12 @@ AbstractBackgroundWidget {
                                 icon: root.emptyIcon()
                                 title: root.emptyTitle()
                                 body: root.emptyBody()
-                                actionText: root.emptyActionText()
+                                actionText: root.creatingSession ? "" : root.emptyActionText()
                                 actionIcon: "terminal"
                                 busy: OpenCode.effectiveState === "starting"
                                     || OpenCode.effectiveState === "reconnecting"
-                                onActionClicked: OpenCode.openOpenCode()
+                                    || root.creatingSession
+                                onActionClicked: root.emptyAction()
                             }
                         }
 
@@ -758,11 +801,12 @@ AbstractBackgroundWidget {
 
                             RippleButton {
                                 implicitHeight: 30
-                                implicitWidth: 78
+                                implicitWidth: root.askSending ? 96 : 78
                                 buttonRadius: 15
                                 enabled: root.askSession && OpenCode.connected
                                     && askInput.text.trim().length > 0
                                     && !OpenCode.actionBusy
+                                    && !root.askSending
                                 colBackground: enabled
                                     ? Appearance.colors.colPrimary
                                     : Appearance.colors.colLayer2
@@ -775,7 +819,7 @@ AbstractBackgroundWidget {
                                 onClicked: root.sendAskPrompt()
 
                                 contentItem: StyledText {
-                                    text: "Send"
+                                    text: root.askSending ? "Sending…" : "Send"
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                     font.pixelSize: Appearance.font.pixelSize.small
