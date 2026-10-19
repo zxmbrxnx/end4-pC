@@ -87,10 +87,18 @@ Singleton {
                 {
                     "name": "switch_to_search_mode",
                     "description": "Search the web",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
                 },
                 {
                     "name": "get_shell_config",
                     "description": "Get the desktop shell config file contents",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {}
+                    }
                 },
                 {
                     "name": "set_shell_config",
@@ -137,7 +145,10 @@ Singleton {
                     "function": {
                         "name": "get_shell_config",
                         "description": "Get the desktop shell config file contents",
-                        "parameters": {}
+                        "parameters": {
+                            "type": "object",
+                            "properties": {}
+                        }
                     },
                 },
                 {
@@ -189,7 +200,10 @@ Singleton {
                     "function": {
                         "name": "get_shell_config",
                         "description": "Get the desktop shell config file contents",
-                        "parameters": {}
+                        "parameters": {
+                            "type": "object",
+                            "properties": {}
+                        }
                     },
                 },
                 {
