@@ -13,12 +13,15 @@ Rectangle {
     property var messageData
     property var messageInputField
 
-    property real messagePadding: 7
-    property real contentSpacing: 3
+    property real messagePadding: 10
+    property real contentSpacing: 6
 
     property bool enableMouseSelection: false
     property bool renderMarkdown: true
     property bool editing: false
+    readonly property bool isUser: messageData?.role === "user"
+    readonly property bool isAssistant: messageData?.role === "assistant"
+    readonly property color accentColor: isUser ? Appearance.colors.colPrimary : isAssistant ? Appearance.colors.colTertiary : Appearance.colors.colSecondary
 
     property list<var> messageBlocks: StringUtils.splitMarkdownBlocks(root.messageData?.content)
 
@@ -26,8 +29,10 @@ Rectangle {
     anchors.right: parent?.right
     implicitHeight: columnLayout.implicitHeight + root.messagePadding * 2
 
-    radius: Appearance.rounding.normal
-    color: Appearance.colors.colLayer1
+    radius: Appearance.rounding.large
+    color: ColorUtils.applyAlpha(root.isUser ? Appearance.colors.colPrimary : Appearance.colors.colLayer1, root.isUser ? 0.26 : 0.48)
+    border.width: 1
+    border.color: ColorUtils.applyAlpha(root.accentColor, root.isUser ? 0.35 : 0.22)
 
     function saveMessage() {
         if (!root.editing) return;
@@ -81,8 +86,8 @@ Rectangle {
             Layout.fillWidth: true
             implicitWidth: headerRowLayout.implicitWidth + 4 * 2
             implicitHeight: headerRowLayout.implicitHeight + 4 * 2
-            color: Appearance.colors.colSecondaryContainer
-            radius: Appearance.rounding.small
+            color: ColorUtils.applyAlpha(root.accentColor, root.isUser ? 0.26 : 0.18)
+            radius: Appearance.rounding.large
         
             RowLayout { // Header
                 id: headerRowLayout
@@ -90,7 +95,7 @@ Rectangle {
                     fill: parent
                     margins: 4
                 }
-                spacing: 18
+                spacing: 8
 
                 Item { // Name
                     id: nameWrapper
@@ -103,35 +108,43 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
-                        spacing: 12
+                        anchors.leftMargin: 8
+                        anchors.rightMargin: 8
+                        spacing: 8
 
                         Item {
                             Layout.alignment: Qt.AlignVCenter
                             Layout.fillHeight: true
-                            implicitWidth: messageData?.role == 'assistant' ? modelIcon.width : roleIcon.implicitWidth
-                            implicitHeight: messageData?.role == 'assistant' ? modelIcon.height : roleIcon.implicitHeight
+                            implicitWidth: 26
+                            implicitHeight: 26
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: width / 2
+                                color: ColorUtils.applyAlpha(root.accentColor, 0.18)
+                                border.width: 1
+                                border.color: ColorUtils.applyAlpha(root.accentColor, 0.30)
+                            }
 
                             CustomIcon {
                                 id: modelIcon
                                 anchors.centerIn: parent
                                 visible: messageData?.role == 'assistant' && Ai.models[messageData?.model].icon
-                                width: Appearance.font.pixelSize.large
-                                height: Appearance.font.pixelSize.large
+                                width: 16
+                                height: 16
                                 source: messageData?.role == 'assistant' ? Ai.models[messageData?.model].icon :
                                     messageData?.role == 'user' ? 'arch-symbolic' : 'desktop-symbolic'
 
                                 colorize: true
-                                color: Appearance.m3colors.m3onSecondaryContainer
+                                color: root.accentColor
                             }
 
                             MaterialSymbol {
                                 id: roleIcon
                                 anchors.centerIn: parent
                                 visible: !modelIcon.visible
-                                iconSize: Appearance.font.pixelSize.larger
-                                color: Appearance.m3colors.m3onSecondaryContainer
+                                iconSize: 17
+                                color: root.accentColor
                                 text: messageData?.role == 'user' ? 'person' : 
                                     messageData?.role == 'interface' ? 'settings' : 
                                     messageData?.role == 'assistant' ? 'neurology' : 
@@ -145,7 +158,8 @@ Rectangle {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                             font.pixelSize: Appearance.font.pixelSize.normal
-                            color: Appearance.m3colors.m3onSecondaryContainer
+                            font.weight: Font.Medium
+                            color: root.accentColor
                             text: messageData?.role == 'assistant' ? Ai.models[messageData?.model].name :
                                 (messageData?.role == 'user' && SystemInfo.username) ? SystemInfo.username :
                                 Translation.tr("Interface")
@@ -265,7 +279,7 @@ Rectangle {
 
         ColumnLayout { // Message content
             id: messageContentColumnLayout
-            spacing: 0
+            spacing: 4
 
             Item {
                 Layout.fillWidth: true

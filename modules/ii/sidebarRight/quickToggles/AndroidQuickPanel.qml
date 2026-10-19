@@ -12,7 +12,14 @@ import qs.modules.ii.sidebarRight.quickToggles.androidStyle
 AbstractQuickPanel {
     id: root
     property bool editMode: false
+    property string styleKey: "android"
+    readonly property bool glass: root.styleKey === "modern"
     Layout.fillWidth: true
+
+    color: root.glass ? ColorUtils.applyAlpha(Appearance.colors.colLayer1, 0.38) : Appearance.colors.colLayer1
+    radius: root.glass ? Appearance.rounding.large : Appearance.rounding.normal
+    border.width: root.glass ? 1 : 0
+    border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.14)
 
     visible: root.editMode || root.toggles.length > 0
 
@@ -20,8 +27,8 @@ AbstractQuickPanel {
     Behavior on implicitHeight {
         animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
     }
-    property real spacing: 6
-    property real padding: 6
+    property real spacing: root.glass ? 8 : 6
+    property real padding: root.glass ? 8 : 6
     readonly property real baseCellWidth: {
         const availableWidth = root.width - (root.padding * 2) - (root.spacing * (root.columns))
         return availableWidth / root.columns
@@ -32,10 +39,10 @@ AbstractQuickPanel {
         const base = ["network", "bluetooth", "idleInhibitor", "easyEffects", "nightLight", "darkMode", "cloudflareWarp", "gameMode", "screenSnip", "colorPicker", "onScreenKeyboard", "mic", "audio", "notifications", "powerProfile","musicRecognition", "antiFlashbang", "vpn"]
         return WM.compositor === "hyprland" ? base : base.filter(t => t !== "gameMode")
     }
-    readonly property int columns: Config.options.sidebar.quickToggles.android.columns
+    readonly property int columns: Config.options.sidebar.quickToggles[root.styleKey].columns
     readonly property list<var> toggles: {
         if (!Config.ready) return []
-        const raw = Config.options.sidebar.quickToggles.android.toggles
+        const raw = Config.options.sidebar.quickToggles[root.styleKey].toggles
         return WM.compositor === "hyprland" ? raw : raw.filter(t => !t || t.type !== "gameMode")
     }
     readonly property list<var> toggleRows: toggleRowsForList(toggles)
@@ -176,15 +183,15 @@ AbstractQuickPanel {
         ConfigSpinBox {
             visible: root.editMode
             width: parent.width 
-            enabled: Config.options.sidebar.quickToggles.style === "android"
+            enabled: Config.options.sidebar.quickToggles.style === root.styleKey
             icon: "add_column_left"
             text: Translation.tr("Columns")
-            value: Config.options.sidebar.quickToggles.android.columns
+            value: Config.options.sidebar.quickToggles[root.styleKey].columns
             from: 1
             to: 8
             stepSize: 1
             onValueChanged: {
-                Config.options.sidebar.quickToggles.android.columns = value;
+                Config.options.sidebar.quickToggles[root.styleKey].columns = value;
             }
         }
     }

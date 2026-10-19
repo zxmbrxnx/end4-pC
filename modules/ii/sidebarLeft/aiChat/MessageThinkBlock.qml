@@ -19,7 +19,7 @@ Item {
     property bool done: true
     property bool completed: false
 
-    property real thinkBlockBackgroundRounding: Appearance.rounding.small
+    property real thinkBlockBackgroundRounding: Appearance.rounding.normal
     property real thinkBlockHeaderPaddingVertical: 3
     property real thinkBlockHeaderPaddingHorizontal: 10
     property real thinkBlockComponentSpacing: 2
@@ -56,7 +56,9 @@ Item {
 
         Rectangle { // Header background
             id: header
-            color: Appearance.colors.colSurfaceContainerHighest
+            color: ColorUtils.applyAlpha(Appearance.colors.colLayer2, 0.5)
+            border.width: 1
+            border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.08)
             Layout.fillWidth: true
             implicitHeight: thinkBlockTitleBarRowLayout.implicitHeight + thinkBlockHeaderPaddingVertical * 2
 
@@ -86,6 +88,8 @@ Item {
                     Layout.bottomMargin: 7
                     Layout.leftMargin: 3
                     text: "linked_services"
+                    iconSize: 15
+                    color: Appearance.colors.colTertiary
                 }
                 StyledText {
                     id: thinkBlockLanguage
@@ -150,7 +154,9 @@ Item {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 implicitHeight: messageTextBlock.implicitHeight
-                color: Appearance.colors.colLayer2
+                color: ColorUtils.applyAlpha(Appearance.colors.colLayer2, 0.4)
+                border.width: 1
+                border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.06)
 
                 // Load data for the message at the correct scope
                 property bool editing: root.editing

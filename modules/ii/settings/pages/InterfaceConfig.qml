@@ -446,19 +446,30 @@ ContentPage {
                                 displayName: Translation.tr("Android"),
                                 icon: "action_key",
                                 value: "android"
+                            },
+                            {
+                                displayName: Translation.tr("Modern"),
+                                icon: "blur_on",
+                                value: "modern"
                             }
                         ]
                     }
                     ConfigSpinBox {
                         enabled: Config.options.sidebar.quickToggles.style === "android"
+                            || Config.options.sidebar.quickToggles.style === "modern"
                         icon: "add_column_left"
                         text: Translation.tr("Columns")
-                        value: Config.options.sidebar.quickToggles.android.columns
+                        value: Config.options.sidebar.quickToggles.style === "modern"
+                            ? Config.options.sidebar.quickToggles.modern.columns
+                            : Config.options.sidebar.quickToggles.android.columns
                         from: 1
                         to: 8
                         stepSize: 1
                         onValueChanged: {
-                            Config.options.sidebar.quickToggles.android.columns = value;
+                            if (Config.options.sidebar.quickToggles.style === "modern")
+                                Config.options.sidebar.quickToggles.modern.columns = value;
+                            else
+                                Config.options.sidebar.quickToggles.android.columns = value;
                         }
                     }
                 }

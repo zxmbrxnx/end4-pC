@@ -33,8 +33,9 @@ Item {
     property bool showWifiDialog: false
     property bool showVpnDialog: false
     property bool editMode: false
-    property string editTab: Config.options.sidebar.quickToggles.style === "android" ? "toggles" : "layout"
-    readonly property var editTabs: Config.options.sidebar.quickToggles.style === "android"
+    readonly property bool toggleGridStyle: ["android", "modern"].includes(Config.options.sidebar.quickToggles.style)
+    property string editTab: root.toggleGridStyle ? "toggles" : "layout"
+    readonly property var editTabs: root.toggleGridStyle
         ? [
             { id: "toggles", name: Translation.tr("Toggles"), icon: "toggle_on" },
             { id: "layout", name: Translation.tr("Layout"), icon: "dashboard_customize" }
@@ -44,6 +45,11 @@ Item {
 
     readonly property bool animatedEntrance: WM.compositor !== "hyprland"
     readonly property bool sidebarOpen: GlobalStates.sidebarRightOpen
+    readonly property bool glassStyle: Config.options.sidebar.quickToggles.style === "modern"
+    readonly property string glassWallpaperPath: {
+        const path = Wallpapers.previewPath || Wallpapers.confirmedPath || Config.options.background.wallpaperPath;
+        return /\.(mp4|webm|mkv|avi|mov)$/i.test(path) ? Config.options.background.thumbnailPath : path;
+    }
 
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property var realPlayers: MprisController.players
@@ -137,13 +143,31 @@ Item {
     StyledRectangularShadow {
         target: sidebarRightBackground
     }
+    Image {
+        id: sidebarGlassWallpaper
+        anchors.fill: sidebarRightBackground
+        visible: root.glassStyle
+        source: root.glassStyle ? root.glassWallpaperPath : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+    }
+
+    FastBlurred {
+        anchors.fill: sidebarRightBackground
+        visible: root.glassStyle
+        blurSource: sidebarGlassWallpaper
+        cardRadius: sidebarRightBackground.radius
+        tint: Appearance.colors.colUiBackground
+        tintOpacity: 0.58
+    }
+
     Rectangle {
         id: sidebarRightBackground
 
         anchors.fill: parent
         implicitHeight: parent.height - Appearance.sizes.hyprlandGapsOut * 2
         implicitWidth: sidebarWidth - Appearance.sizes.hyprlandGapsOut * 2
-        color: Appearance.colors.colUiBackground
+        color: root.glassStyle ? "transparent" : Appearance.colors.colUiBackground
         border.width: 1
         border.color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.8) 
         radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 5
@@ -430,7 +454,7 @@ Item {
     Component {
         id: quickTogglesSection
         Item {
-            implicitHeight: (classicLoader.item?.implicitHeight ?? 0) + (androidLoader.item?.implicitHeight ?? 0)
+            implicitHeight: (classicLoader.item?.implicitHeight ?? 0) + (androidLoader.item?.implicitHeight ?? 0) + (modernLoader.item?.implicitHeight ?? 0)
 
             Loader {
                 id: classicLoader
@@ -450,6 +474,16 @@ Item {
                 }
             }
 
+            Loader {
+                id: modernLoader
+                anchors.left: parent.left
+                anchors.right: parent.right
+                active: Config.options.sidebar.quickToggles.style === "modern"
+                sourceComponent: ModernQuickPanel {
+                    editMode: root.editMode && root.editTab === "toggles"
+                }
+            }
+
             Connections {
                 target: classicLoader.item
                 function onOpenAudioOutputDialog() { root.showAudioOutputDialog = true; }
@@ -462,6 +496,16 @@ Item {
 
             Connections {
                 target: androidLoader.item
+                function onOpenAudioOutputDialog() { root.showAudioOutputDialog = true; }
+                function onOpenAudioInputDialog() { root.showAudioInputDialog = true; }
+                function onOpenBluetoothDialog() { root.showBluetoothDialog = true; }
+                function onOpenNightLightDialog() { root.showNightLightDialog = true; }
+                function onOpenWifiDialog() { root.showWifiDialog = true; }
+                function onOpenVpnDialog() { root.showVpnDialog = true; }
+            }
+
+            Connections {
+                target: modernLoader.item
                 function onOpenAudioOutputDialog() { root.showAudioOutputDialog = true; }
                 function onOpenAudioInputDialog() { root.showAudioInputDialog = true; }
                 function onOpenBluetoothDialog() { root.showBluetoothDialog = true; }

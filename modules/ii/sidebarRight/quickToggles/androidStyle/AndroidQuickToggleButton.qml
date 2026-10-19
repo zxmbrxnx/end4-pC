@@ -34,6 +34,7 @@ GroupButton {
     altAction: toggleModel?.hasMenu ? (() => root.openMenu()) : (toggleModel?.altAction ?? null)
 
     property bool editMode: false
+    property bool glass: Config.options.sidebar.quickToggles.style === "modern"
 
     property real dragOffsetX: 0
     property real dragOffsetY: 0
@@ -89,12 +90,28 @@ GroupButton {
     horizontalPadding: padding
     verticalPadding: padding
 
-    colBackground: Appearance.colors.colLayer2
-    colBackgroundToggled: (altAction && expandedSize) ? Appearance.colors.colLayer2 : Appearance.colors.colPrimary
-    colBackgroundToggledHover: (altAction && expandedSize) ? Appearance.colors.colLayer2Hover : Appearance.colors.colPrimaryHover
-    colBackgroundToggledActive: (altAction && expandedSize) ? Appearance.colors.colLayer2Active : Appearance.colors.colPrimaryActive
-    buttonRadius: toggled ? Appearance.rounding.large : height / 2
+    colBackground: root.glass ? ColorUtils.applyAlpha(Appearance.colors.colLayer1, 0.35) : Appearance.colors.colLayer2
+    colBackgroundHover: root.glass ? ColorUtils.applyAlpha(Appearance.colors.colLayer2Hover, 0.55) : Appearance.colors.colLayer2Hover
+    colBackgroundActive: root.glass ? ColorUtils.applyAlpha(Appearance.colors.colLayer2Active, 0.6) : Appearance.colors.colLayer2Active
+    colBackgroundToggled: (altAction && expandedSize) ? Appearance.colors.colLayer2 : (root.glass ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.82) : Appearance.colors.colPrimary)
+    colBackgroundToggledHover: (altAction && expandedSize) ? Appearance.colors.colLayer2Hover : (root.glass ? ColorUtils.applyAlpha(Appearance.colors.colPrimaryHover, 0.88) : Appearance.colors.colPrimaryHover)
+    colBackgroundToggledActive: (altAction && expandedSize) ? Appearance.colors.colLayer2Active : (root.glass ? ColorUtils.applyAlpha(Appearance.colors.colPrimaryActive, 0.9) : Appearance.colors.colPrimaryActive)
+    buttonRadius: root.glass ? Appearance.rounding.large : (toggled ? Appearance.rounding.large : height / 2)
     buttonRadiusPressed: Appearance.rounding.normal
+
+    background: Rectangle {
+        topLeftRadius: root.leftRadius
+        topRightRadius: root.rightRadius
+        bottomLeftRadius: root.leftRadius
+        bottomRightRadius: root.rightRadius
+        implicitHeight: 50
+        color: root.color
+        border.width: root.glass ? 1 : (root.tabbedTo ? 2 : 0)
+        border.color: root.glass ? ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.16) : Appearance.colors.colSecondary
+        Behavior on color {
+            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        }
+    }
     property color colText: (toggled && !(altAction && expandedSize) && enabled) ? Appearance.colors.colOnPrimary : ColorUtils.transparentize(Appearance.colors.colOnLayer2, enabled ? 0 : 0.7)
     property color colIcon: expandedSize ? ((root.toggled) ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer3) : colText
 
@@ -131,6 +148,10 @@ GroupButton {
                 implicitWidth: height
                 radius: root.radius - root.verticalPadding
                 color: {
+                    if (root.glass) {
+                        const baseColor = root.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer3
+                        return ColorUtils.applyAlpha(baseColor, root.toggled ? 0.18 : 0.10)
+                    }
                     const baseColor = root.toggled ? Appearance.colors.colPrimary : Appearance.colors.colLayer3
                     const transparentizeAmount = (root.altAction && root.expandedSize) ? 0 : 1
                     return ColorUtils.transparentize(baseColor, transparentizeAmount)
@@ -250,7 +271,7 @@ GroupButton {
                 root.settleScenePos = root.mapToItem(null, 0, 0);
                 root.settlePending = true;
                 if (nearest) {
-                    const toggleList = Config.options.sidebar.quickToggles.android.toggles;
+                    const toggleList = Config.options.sidebar.quickToggles[Config.options.sidebar.quickToggles.style].toggles;
                     const myType = root.buttonData.type;
                     const sibType = nearest.buttonData.type;
                     const myIdx = toggleList.findIndex(t => t.type === myType);
@@ -305,7 +326,7 @@ GroupButton {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            const toggleList = Config.options.sidebar.quickToggles.android.toggles;
+            const toggleList = Config.options.sidebar.quickToggles[Config.options.sidebar.quickToggles.style].toggles;
             const buttonType = root.buttonData.type;
             if (!toggleList.find(t => t.type === buttonType))
                 toggleList.push({ type: buttonType, size: 1 });
@@ -358,7 +379,7 @@ GroupButton {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
-                const toggleList = Config.options.sidebar.quickToggles.android.toggles;
+                const toggleList = Config.options.sidebar.quickToggles[Config.options.sidebar.quickToggles.style].toggles;
                 const buttonType = root.buttonData.type;
                 const idx = toggleList.findIndex(t => t.type === buttonType);
                 if (idx !== -1) toggleList.splice(idx, 1);
@@ -430,7 +451,7 @@ GroupButton {
                 const steps = Math.round(dx / root.baseCellWidth);
                 const newSize = Math.max(1, Math.min(3, pressSize + steps));
                 if (newSize !== root.cellSize) {
-                    const toggleList = Config.options.sidebar.quickToggles.android.toggles;
+                    const toggleList = Config.options.sidebar.quickToggles[Config.options.sidebar.quickToggles.style].toggles;
                     const buttonType = root.buttonData.type;
                     const idx = toggleList.findIndex(t => t.type === buttonType);
                     if (idx !== -1) toggleList[idx].size = newSize;
