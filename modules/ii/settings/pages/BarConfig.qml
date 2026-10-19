@@ -40,6 +40,7 @@ ContentPage {
         { id: "launcherButton",     name: Translation.tr("Launcher Button"),     icon: "search" },
         { id: "dynamicIsland",     name: Translation.tr("Dynamic Island"),     icon: "nest_wifi_pro" },
         { id: "aiUsage",           name: Translation.tr("AI Usage"),           icon: "neurology" },
+        { id: "opencode",          name: Translation.tr("OpenCode"),           icon: "smart_toy" },
         { id: "avatar",            name: Translation.tr("Avatar"),             icon: "account_circle" },
     ]
 

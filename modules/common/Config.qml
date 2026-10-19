@@ -556,6 +556,13 @@ Singleton {
                     property int updateInterval: 60
                 }
 
+                property JsonObject opencode: JsonObject {
+                    property bool showCount: true
+                    property bool showWaiting: true
+                    property bool dynamicIslandAlerts: true
+                    property int popupSessionLimit: 4
+                }
+
                 property JsonObject dynamicIsland: JsonObject {
                     property string visualizerStyle: "dots" // "dots", "wave", "none"
                     property bool showMediaControls: false

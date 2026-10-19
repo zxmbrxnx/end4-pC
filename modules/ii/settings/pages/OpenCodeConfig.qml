@@ -203,5 +203,57 @@ ContentPage {
                 }
             }
         }
+
+        ContentSection {
+            icon: "toast"
+            shape: MaterialShape.Shape.Bun
+            title: "Bar & alerts"
+
+            GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "tag"
+                    text: "Show active count in bar"
+                    checked: Config.options.bar.opencode.showCount
+                    onCheckedChanged: Config.options.bar.opencode.showCount = checked
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "notification_important"
+                    text: "Show waiting badge in bar"
+                    checked: Config.options.bar.opencode.showWaiting
+                    onCheckedChanged: Config.options.bar.opencode.showWaiting = checked
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "nest_wifi_pro"
+                    text: "Agent alerts in dynamic island"
+                    checked: Config.options.bar.opencode.dynamicIslandAlerts
+                    onCheckedChanged: Config.options.bar.opencode.dynamicIslandAlerts = checked
+                }
+
+                ConfigSlider {
+                    Layout.fillWidth: true
+                    text: "Popup sessions"
+                    buttonIcon: "format_list_numbered"
+                    value: Config.options.bar.opencode.popupSessionLimit
+                    from: 2
+                    to: 8
+                    stepSize: 1
+                    usePercentTooltip: false
+                    stopIndicatorValues: [4]
+                    onValueChanged: Config.options.bar.opencode.popupSessionLimit = Math.round(value)
+                }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                Layout.leftMargin: 8
+                Layout.rightMargin: 8
+                text: "Add the OpenCode widget from Settings → Bar to show it in the bar."
+                wrapMode: Text.Wrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+            }
+        }
     }
 }
