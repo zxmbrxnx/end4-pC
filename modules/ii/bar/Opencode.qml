@@ -10,6 +10,7 @@ MouseArea {
     property color contentColor: Appearance.colors.colOnLayer1
     property bool contentColorOverridden: false
     property bool vertical: Config.options.bar.vertical
+    property bool popupOpen: false
 
     readonly property bool waiting: Services.OpenCode.pendingCount > 0
         && Config.options.bar.opencode.showWaiting
@@ -17,11 +18,11 @@ MouseArea {
     readonly property bool active: Services.OpenCode.connected && (waiting || working)
     readonly property int count: waiting ? Services.OpenCode.pendingCount : (working ? Services.OpenCode.workingCount : 0)
     readonly property bool countVisible: Config.options.bar.opencode.showCount && count > 0
-    readonly property string iconName: waiting ? "gpp_maybe" : (working ? "progress_activity" : "smart_toy")
+    readonly property string iconName: waiting ? "gpp_maybe" : (working ? "progress_activity" : (Services.OpenCode.connected ? "smart_toy" : "terminal"))
     readonly property color iconColor: {
         if (waiting) return root.contentColorOverridden ? root.contentColor : Appearance.colors.colTertiary;
         if (working) return root.contentColorOverridden ? root.contentColor : Appearance.colors.colPrimary;
-        return root.contentColorOverridden ? Qt.alpha(root.contentColor, 0.6) : Appearance.colors.colSubtext;
+        return root.contentColorOverridden ? root.contentColor : Appearance.colors.colSubtext;
     }
 
     implicitWidth: root.vertical
@@ -33,9 +34,7 @@ MouseArea {
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
     cursorShape: Qt.PointingHandCursor
 
-    onClicked: {
-        if (!Services.OpenCode.connected) Services.OpenCode.openOpenCode();
-    }
+    onClicked: root.popupOpen = !root.popupOpen
 
     GridLayout {
         id: content
@@ -49,7 +48,6 @@ MouseArea {
             text: root.iconName
             iconSize: 16
             color: root.iconColor
-            opacity: Services.OpenCode.connected ? 1 : 0.55
 
             RotationAnimation on rotation {
                 running: root.working
@@ -77,5 +75,8 @@ MouseArea {
 
     OpenCodePopup {
         hoverTarget: root
+        hoverOpen: false
+        pinned: root.popupOpen
+        onPerformed: root.popupOpen = false
     }
 }
