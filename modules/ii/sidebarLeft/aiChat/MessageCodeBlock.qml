@@ -22,7 +22,7 @@ ColumnLayout {
     property bool isCommandRequest: segmentLang === "command"
     property var displayLang: (isCommandRequest ? "bash" : segmentLang)
 
-    property real codeBlockBackgroundRounding: Appearance.rounding.small
+    property real codeBlockBackgroundRounding: Appearance.rounding.normal
     property real codeBlockHeaderPadding: 3
     property real codeBlockComponentSpacing: 2
 
@@ -34,7 +34,9 @@ ColumnLayout {
         topRightRadius: codeBlockBackgroundRounding
         bottomLeftRadius: Appearance.rounding.unsharpen
         bottomRightRadius: Appearance.rounding.unsharpen
-        color: Appearance.colors.colSurfaceContainerHighest
+        color: ColorUtils.applyAlpha(Appearance.colors.colLayer2, 0.55)
+        border.width: 1
+        border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.08)
         implicitHeight: codeBlockTitleBarRowLayout.implicitHeight + codeBlockHeaderPadding * 2
 
         RowLayout { // Language and buttons
@@ -46,13 +48,21 @@ ColumnLayout {
             anchors.rightMargin: codeBlockHeaderPadding
             spacing: 5
 
+            MaterialSymbol {
+                Layout.alignment: Qt.AlignLeft
+                Layout.leftMargin: 8
+                text: "code"
+                iconSize: 14
+                color: Appearance.colors.colPrimary
+            }
+
             StyledText {
                 id: codeBlockLanguage
                 Layout.alignment: Qt.AlignLeft
                 Layout.fillWidth: false
                 Layout.topMargin: 7
                 Layout.bottomMargin: 7
-                Layout.leftMargin: 10
+                Layout.leftMargin: 2
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.DemiBold
                 color: Appearance.colors.colOnLayer2
@@ -130,7 +140,7 @@ ColumnLayout {
             bottomLeftRadius: codeBlockBackgroundRounding
             topRightRadius: Appearance.rounding.unsharpen
             bottomRightRadius: Appearance.rounding.unsharpen
-            color: Appearance.colors.colLayer2
+            color: ColorUtils.applyAlpha(Appearance.colors.colLayer2, 0.35)
 
             ColumnLayout {
                 id: lineNumberColumnLayout
@@ -165,7 +175,7 @@ ColumnLayout {
             bottomLeftRadius: Appearance.rounding.unsharpen
             topRightRadius: Appearance.rounding.unsharpen
             bottomRightRadius: codeBlockBackgroundRounding
-            color: Appearance.colors.colLayer2
+            color: ColorUtils.applyAlpha(Appearance.colors.colLayer2, 0.45)
             implicitHeight: codeColumnLayout.implicitHeight
 
             ColumnLayout {

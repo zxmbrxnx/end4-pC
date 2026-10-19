@@ -11,6 +11,10 @@ Item {
     id: root
     required property var scopeRoot
     property int sidebarPadding: 10
+    readonly property string glassWallpaperPath: {
+        const path = Wallpapers.previewPath || Wallpapers.confirmedPath || Config.options.background.wallpaperPath;
+        return /\.(mp4|webm|mkv|avi|mov)$/i.test(path) ? Config.options.background.thumbnailPath : path;
+    }
     anchors.fill: parent
     property bool aiChatEnabled: Config.options.policies.ai !== 0
     property bool translatorEnabled: Config.options.sidebar.translator.enable
@@ -69,7 +73,24 @@ Item {
             bottomLeftRadius: Appearance.rounding.normal
             topRightRadius: 0
             bottomRightRadius: Appearance.rounding.normal
-            color: Appearance.colors.colLayer1
+            color: "transparent"
+            clip: true
+
+            Image {
+                id: leftGlassWallpaper
+                anchors.fill: parent
+                source: root.glassWallpaperPath
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+            }
+
+            FastBlurred {
+                anchors.fill: parent
+                blurSource: leftGlassWallpaper
+                cardRadius: 0
+                tint: Appearance.colors.colLayer1
+                tintOpacity: 0.60
+            }
 
             SwipeView { // Content pages
                 id: swipeView

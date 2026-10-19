@@ -485,8 +485,10 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             id: inputWrapper
             property real spacing: 5
             Layout.fillWidth: true
-            radius: Appearance.rounding.normal - root.padding
-            color: Appearance.colors.colLayer2
+            radius: Appearance.rounding.large
+            color: ColorUtils.applyAlpha(Appearance.colors.colLayer2, 0.45)
+            border.width: 1
+            border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.10)
             implicitHeight: Math.max(inputFieldRowLayout.implicitHeight + inputFieldRowLayout.anchors.topMargin + commandButtonsRow.implicitHeight + commandButtonsRow.anchors.bottomMargin + spacing, 45) + (attachedFileIndicator.implicitHeight + spacing + attachedFileIndicator.anchors.topMargin)
             clip: true
 
@@ -712,7 +714,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                     Layout.rightMargin: 5
                     implicitWidth: 40
                     implicitHeight: 40
-                    buttonRadius: Appearance.rounding.small
+                    buttonRadius: Appearance.rounding.large
                     enabled: messageInputField.text.length > 0
                     toggled: enabled
 

@@ -1,7 +1,7 @@
 # Personal fork workflow
 
 This fork tracks [pctrade/end4-pC](https://github.com/pctrade/end4-pC) and adds an
-OpenCode desktop integration.
+OpenCode desktop integration plus local sidebar UI customizations.
 
 ## Branches
 
@@ -68,6 +68,16 @@ Keep these changes small and isolated. Everything else should live in new files.
 | `modules/ii/bar/DynamicIsland.qml` | OpenCode alert provider and component |
 | `modules/ii/settings/pages/BarConfig.qml` | bar widget entry |
 | `modules/ii/settings/DashboardBarWidgets.qml` | bar widget entry |
+| `modules/ii/settings/pages/InterfaceConfig.qml` | modern quick-toggles style option |
+| `modules/ii/sidebarRight/SidebarRightContent.qml` | modern quick-toggle loader and glass backdrop |
+| `modules/ii/sidebarRight/quickToggles/AndroidQuickPanel.qml` | modern style key and glass panel |
+| `modules/ii/sidebarRight/quickToggles/androidStyle/AndroidQuickToggleButton.qml` | glass toggle visuals |
+| `modules/ii/sidebarLeft/AiChat.qml` | glass prompt input |
+| `modules/ii/sidebarLeft/SidebarLeftContent.qml` | glass sidebar backdrop |
+| `modules/ii/sidebarLeft/aiChat/AiMessage.qml` | glass message cards and avatars |
+| `modules/ii/sidebarLeft/aiChat/MessageCodeBlock.qml` | glass code blocks |
+| `modules/ii/sidebarLeft/aiChat/MessageTextBlock.qml` | chat typography |
+| `modules/ii/sidebarLeft/aiChat/MessageThinkBlock.qml` | glass think block |
 | `services/LauncherSearch.qml` | `/ask` launcher action |
 | `services/SettingsPages.qml` | settings page entry |
 | `translations/en_US.json`, `translations/es_ES.json` | optional new keys |
@@ -84,6 +94,7 @@ modules/ii/bar/Opencode.qml
 modules/ii/bar/OpenCodePopup.qml
 modules/ii/bar/DiOpenCode.qml
 modules/ii/settings/pages/OpenCodeConfig.qml
+modules/ii/sidebarRight/quickToggles/ModernQuickPanel.qml
 ```
 
 ## Conflict strategy
