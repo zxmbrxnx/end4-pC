@@ -473,6 +473,19 @@ Singleton {
                         property string alignment: "center" // "left", "center", "right"
                         property bool shadow: true
                     }
+
+                    property JsonObject opencodeHub: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 400
+                        property real y: 120
+                        property real z: 0
+                        property int maxSessions: 6
+                        property bool showCost: true
+                        property bool showProject: true
+                        property bool privacyMode: false
+                        property string defaultPage: "sessions" // "sessions" | "attention"
+                    }
                 }
                 property JsonObject liveWallpaper: JsonObject {
                     property bool pauseOnBattery: false // Pause as soon as the charger is out

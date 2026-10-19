@@ -17,6 +17,7 @@ Singleton {
         { key: "resources",   icon: "monitor_heart",     name: Translation.tr("Resources") },
         { key: "userCard",    icon: "person",            name: Translation.tr("User Card") },
         { key: "todo",        icon: "add_task",          name: Translation.tr("To-Do") },
+        { key: "opencodeHub", icon: "smart_toy",          name: Translation.tr("OpenCode") },
         { key: "notes",       icon: "note_stack_add",    name: Translation.tr("Notes") },
         { key: "timers",      icon: "timer",             name: Translation.tr("Timers") },
         { key: "images",      icon: "photo_library",     name: Translation.tr("Image Converter") },

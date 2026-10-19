@@ -18,6 +18,7 @@ import qs.modules.ii.background.widgets.worldclock
 import qs.modules.ii.background.widgets.usercard
 import qs.modules.ii.background.widgets.notes
 import qs.modules.ii.background.widgets.todo
+import qs.modules.ii.background.widgets.opencode
 import qs.modules.ii.background.widgets.timers
 import qs.modules.ii.background.widgets.customtext
 
@@ -47,6 +48,7 @@ Item {
             { key: "worldClock" },
             { key: "userCard" },
             { key: "todo" },
+            { key: "opencodeHub" },
             { key: "timers" },
             { key: "customText" },
         ]
@@ -79,6 +81,7 @@ Item {
                     case "worldClock":  return worldClockComp
                     case "userCard":    return userCardComp
                     case "todo":        return todoComp
+                    case "opencodeHub": return opencodeHubComp
                     case "timers":      return timersComp
                     case "customText":  return customTextComp
                 }
@@ -250,6 +253,17 @@ Item {
     Component {
         id: todoComp
         TodoWidget {
+            screenWidth: root.screen.width
+            screenHeight: root.screen.height
+            scaledScreenWidth: root.screen.width
+            scaledScreenHeight: root.screen.height
+            wallpaperScale: 1
+            wallpaperItem: root.wallpaperItem
+        }
+    }
+    Component {
+        id: opencodeHubComp
+        AgentHubWidget {
             screenWidth: root.screen.width
             screenHeight: root.screen.height
             scaledScreenWidth: root.screen.width
