@@ -9,7 +9,7 @@ OpenCode desktop integration.
 | --- | --- |
 | `main` | Mirror of `upstream/main`. Never commit here. |
 | `personal` | Integration branch with personal changes. |
-| `feat/*` | Short-lived feature branches, merged into `personal`. |
+| `feat/*`, `fix/*` | Short-lived branches, merged into `personal`. |
 
 ## Remotes
 
@@ -63,6 +63,7 @@ Keep these changes small and isolated. Everything else should live in new files.
 | --- | --- |
 | `services/DesktopWidgets.qml` | catalog entry |
 | `modules/common/Config.qml` | `background.widgets.opencodeHub` and `bar.opencode` blocks |
+| `modules/common/widgets/StyledPopup.qml` | opt-in `pinned` / `hoverOpen` properties |
 | `modules/ii/background/WidgetsLoader.qml` | import, model entry, component |
 | `modules/ii/bar/DynamicIsland.qml` | OpenCode alert provider and component |
 | `modules/ii/settings/pages/BarConfig.qml` | bar widget entry |

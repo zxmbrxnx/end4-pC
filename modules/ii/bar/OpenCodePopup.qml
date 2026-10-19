@@ -7,6 +7,8 @@ import QtQuick.Layouts
 StyledPopup {
     id: root
 
+    signal performed()
+
     function projectName(directory) {
         if (!directory) return "";
         const parts = String(directory).split("/").filter(part => part.length > 0);
@@ -94,7 +96,10 @@ StyledPopup {
                 label: "Open"
                 bg: Appearance.colors.colPrimary
                 fg: Appearance.colors.colOnPrimary
-                onActivated: OpenCode.openOpenCode()
+                onActivated: {
+                    OpenCode.openOpenCode();
+                    root.performed();
+                }
             }
         }
 
@@ -136,7 +141,10 @@ StyledPopup {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: OpenCode.openSession(sessionRow.modelData.id, sessionRow.modelData.directory)
+                        onClicked: {
+                            OpenCode.openSession(sessionRow.modelData.id, sessionRow.modelData.directory);
+                            root.performed();
+                        }
                     }
 
                     RowLayout {
@@ -266,22 +274,28 @@ StyledPopup {
                                 label: "Once"
                                 bg: Appearance.colors.colPrimary
                                 fg: Appearance.colors.colOnPrimary
-                                onActivated: OpenCode.replyPermission(
-                                    permissionRow.modelData.sessionID,
-                                    permissionRow.modelData.id,
-                                    "once"
-                                )
+                                onActivated: {
+                                    OpenCode.replyPermission(
+                                        permissionRow.modelData.sessionID,
+                                        permissionRow.modelData.id,
+                                        "once"
+                                    );
+                                    root.performed();
+                                }
                             }
 
                             SmallAction {
                                 label: "Reject"
                                 bg: Appearance.colors.colErrorContainer
                                 fg: Appearance.colors.colOnErrorContainer
-                                onActivated: OpenCode.replyPermission(
-                                    permissionRow.modelData.sessionID,
-                                    permissionRow.modelData.id,
-                                    "reject"
-                                )
+                                onActivated: {
+                                    OpenCode.replyPermission(
+                                        permissionRow.modelData.sessionID,
+                                        permissionRow.modelData.id,
+                                        "reject"
+                                    );
+                                    root.performed();
+                                }
                             }
                         }
                     }
@@ -305,14 +319,20 @@ StyledPopup {
                 label: "Open"
                 bg: Appearance.colors.colPrimary
                 fg: Appearance.colors.colOnPrimary
-                onActivated: OpenCode.openOpenCode()
+                onActivated: {
+                    OpenCode.openOpenCode();
+                    root.performed();
+                }
             }
 
             SmallAction {
                 label: "Retry"
                 bg: Appearance.colors.colSecondaryContainer
                 fg: Appearance.colors.colOnSecondaryContainer
-                onActivated: OpenCode.retryNow()
+                onActivated: {
+                    OpenCode.retryNow();
+                    root.performed();
+                }
             }
         }
     }
