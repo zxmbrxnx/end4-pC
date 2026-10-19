@@ -34,6 +34,7 @@ HTTP_TIMEOUT_SECONDS = 3.0
 SCHEMA_VERSION = 1
 
 STOP_REQUESTED = False
+PARENT_PID = os.getppid()
 
 
 def _now_ms() -> int:
@@ -615,6 +616,9 @@ def main() -> int:
     last_state = None
 
     while not STOP_REQUESTED:
+        if os.getppid() != PARENT_PID:
+            # Quickshell restarted or exited; don't leave a stale bridge behind.
+            break
         snapshot = _mock_snapshot() if args.mock else _collect(runtime, args.poll_interval)
         fingerprint = _fingerprint(snapshot)
         state = str(snapshot.get("state") or "")
@@ -630,7 +634,10 @@ def main() -> int:
             except OSError as exc:
                 print(f"failed to write state: {exc}", file=sys.stderr)
             if args.stdout:
-                print(json.dumps(snapshot, ensure_ascii=False, separators=(",", ":")), flush=True)
+                try:
+                    print(json.dumps(snapshot, ensure_ascii=False, separators=(",", ":")), flush=True)
+                except BrokenPipeError:
+                    break
             last_fingerprint = fingerprint
             last_write = now
 
