@@ -17,6 +17,7 @@ Singleton {
             { id: "desktop",   name: Translation.tr("Desktop"),   icon: "texture",        file: "BackgroundConfig.qml" },
             { id: "interface", name: Translation.tr("Interface"), icon: "bottom_app_bar", file: "InterfaceConfig.qml" },
             { id: "services",  name: Translation.tr("Services"),  icon: "settings",       file: "ServicesConfig.qml" },
+            { id: "opencode",  name: "OpenCode",                  icon: "smart_toy",      file: "OpenCodeConfig.qml" },
         ];
         if (WM.compositor === "hyprland")
             list.push({ id: "hyprland", name: Translation.tr("Hyprland"), icon: "select_window_2", file: "HyprlandConfig.qml" });
