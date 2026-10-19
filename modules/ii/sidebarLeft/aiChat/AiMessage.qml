@@ -25,14 +25,14 @@ Rectangle {
 
     property list<var> messageBlocks: StringUtils.splitMarkdownBlocks(root.messageData?.content)
 
-    anchors.left: parent?.left
-    anchors.right: parent?.right
     implicitHeight: columnLayout.implicitHeight + root.messagePadding * 2
 
     radius: Appearance.rounding.large
     color: ColorUtils.applyAlpha(root.isUser ? Appearance.colors.colPrimary : Appearance.colors.colLayer1, root.isUser ? 0.26 : 0.48)
     border.width: 1
     border.color: ColorUtils.applyAlpha(root.accentColor, root.isUser ? 0.35 : 0.22)
+
+    HoverHandler { id: messageHover }
 
     function saveMessage() {
         if (!root.editing) return;
@@ -190,6 +190,9 @@ Rectangle {
 
                 ButtonGroup {
                     spacing: 5
+                    opacity: messageHover.hovered || root.editing ? 1 : 0
+                    enabled: opacity > 0
+                    Behavior on opacity { NumberAnimation { duration: 100 } }
 
                     AiMessageControlButton {
                         id: regenButton
@@ -294,8 +297,40 @@ Rectangle {
                     id: loadingIndicatorLoader
                     anchors.centerIn: parent
                     shown: (root.messageBlocks.length < 1) && (!root.messageData.done)
-                    sourceComponent: MaterialLoadingIndicator {
-                        loading: true
+                    sourceComponent: Rectangle {
+                        implicitWidth: typingRow.implicitWidth + 18
+                        implicitHeight: typingRow.implicitHeight + 12
+                        radius: height / 2
+                        color: ColorUtils.applyAlpha(Appearance.colors.colLayer2, 0.6)
+                        border.width: 1
+                        border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.08)
+
+                        Row {
+                            id: typingRow
+                            anchors.centerIn: parent
+                            spacing: 5
+
+                            Repeater {
+                                model: 3
+                                Rectangle {
+                                    required property int index
+                                    width: 6
+                                    height: 6
+                                    radius: 3
+                                    color: root.accentColor
+                                    opacity: 0.25
+
+                                    SequentialAnimation on opacity {
+                                        running: true
+                                        loops: Animation.Infinite
+                                        PauseAnimation { duration: index * 160 }
+                                        NumberAnimation { to: 1; duration: 260; easing.type: Easing.OutCubic }
+                                        NumberAnimation { to: 0.25; duration: 260; easing.type: Easing.InCubic }
+                                        PauseAnimation { duration: 480 }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

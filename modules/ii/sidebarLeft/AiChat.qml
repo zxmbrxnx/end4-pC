@@ -394,14 +394,26 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                         return message?.visibleToUser ?? true;
                     })
                 }
-                delegate: AiMessage {
+                delegate: Item {
+                    id: messageDelegateItem
                     required property var modelData
                     required property int index
-                    messageIndex: index
-                    messageData: {
-                        Ai.messageByID[modelData];
+
+                    readonly property var message: Ai.messageByID[modelData]
+                    readonly property bool fromUser: message?.role === "user"
+
+                    width: messageListView.width
+                    implicitHeight: messageItem.implicitHeight
+                    height: messageItem.implicitHeight
+
+                    AiMessage {
+                        id: messageItem
+                        width: Math.min(parent.width * 0.88, parent.width - 8)
+                        x: messageDelegateItem.fromUser ? (messageDelegateItem.width - width - 4) : 4
+                        messageIndex: index
+                        messageData: messageDelegateItem.message
+                        messageInputField: root.inputField
                     }
-                    messageInputField: root.inputField
                 }
             }
 
