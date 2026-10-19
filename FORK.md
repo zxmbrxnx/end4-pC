@@ -62,8 +62,9 @@ Keep these changes small and isolated. Everything else should live in new files.
 | File | Change |
 | --- | --- |
 | `services/DesktopWidgets.qml` | catalog entry |
-| `modules/common/Config.qml` | `background.widgets.opencodeHub` block |
+| `modules/common/Config.qml` | `background.widgets.opencodeHub` and `bar.opencode` blocks |
 | `modules/ii/background/WidgetsLoader.qml` | import, model entry, component |
+| `modules/ii/bar/DynamicIsland.qml` | OpenCode alert provider and component |
 | `modules/ii/settings/pages/BarConfig.qml` | bar widget entry |
 | `modules/ii/settings/DashboardBarWidgets.qml` | bar widget entry |
 | `services/SettingsPages.qml` | settings page entry |
@@ -79,6 +80,7 @@ scripts/ai/opencode-mock-server.py
 modules/ii/background/widgets/opencode/
 modules/ii/bar/OpenCode.qml
 modules/ii/bar/OpenCodePopup.qml
+modules/ii/bar/DiOpenCode.qml
 modules/ii/settings/pages/OpenCodeConfig.qml
 ```
 
