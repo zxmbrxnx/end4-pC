@@ -15,17 +15,42 @@ AbstractBackgroundWidget {
     hoverEnabled: true
     visibleWhenLocked: false
 
-    readonly property real defaultWidth: 360
-    readonly property real defaultHeight: 340
-    readonly property real minWidgetWidth: 320
-    readonly property real minWidgetHeight: 280
-    readonly property real maxWidgetWidth: Math.max(root.minWidgetWidth, Math.min(760, root.scaledScreenWidth - 24))
-    readonly property real maxWidgetHeight: Math.max(root.minWidgetHeight, Math.min(820, root.scaledScreenHeight - 40))
+    readonly property real singleWidth: 360
+    readonly property real singleHeight: 340
+    readonly property real doubleWidth: 520
+    readonly property real doubleHeight: 500
+    readonly property real tripleWidth: 680
+    readonly property real tripleHeight: 620
 
-    property real widgetWidth: root.defaultWidth
-    property real widgetHeight: root.defaultHeight
-    property bool resizing: false
-    property real resizeStartHeight: -1
+    readonly property real widthMid1: (root.singleWidth + root.doubleWidth) / 2
+    readonly property real widthMid2: (root.doubleWidth + root.tripleWidth) / 2
+    readonly property real heightToggleDelta: (root.doubleHeight - root.singleHeight) * 0.3
+
+    property string sizeMode: root.configEntry.sizeMode ?? "medium"
+
+    readonly property bool tallMode: root.sizeMode === "tall"
+        || root.sizeMode === "medium"
+        || root.sizeMode === "large"
+
+    property real widgetWidth: {
+        switch (root.sizeMode) {
+            case "wide":   return root.doubleWidth;
+            case "tall":   return root.singleWidth;
+            case "medium": return root.doubleWidth;
+            case "large":  return root.tripleWidth;
+            default:       return root.singleWidth;
+        }
+    }
+
+    property real widgetHeight: {
+        switch (root.sizeMode) {
+            case "wide":   return root.singleHeight;
+            case "tall":   return root.doubleHeight;
+            case "medium": return root.doubleHeight;
+            case "large":  return root.tripleHeight;
+            default:       return root.singleHeight;
+        }
+    }
 
     readonly property bool privacyMode: root.configEntry.privacyMode ?? false
     readonly property bool showCost: root.configEntry.showCost ?? true
@@ -33,78 +58,31 @@ AbstractBackgroundWidget {
 
     property int pageIndex: 0
 
-    implicitWidth: root.widgetWidth
-    implicitHeight: root.widgetHeight
+    implicitWidth: card.implicitWidth
+    implicitHeight: card.implicitHeight
 
-    function clampSize(value, minimum, maximum) {
-        return Math.max(minimum, Math.min(maximum, value));
+    Behavior on widgetWidth {
+        animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
     }
 
-    function snapSize(value, minimum, maximum) {
-        return root.clampSize(Math.round(value / 20) * 20, minimum, maximum);
+    Behavior on widgetHeight {
+        animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
     }
 
-    function loadSizeFromConfig() {
-        root.widgetWidth = root.clampSize(
-            Number(root.configEntry.width ?? root.defaultWidth),
-            root.minWidgetWidth,
-            root.maxWidgetWidth
-        );
-        root.widgetHeight = root.clampSize(
-            Number(root.configEntry.height ?? root.defaultHeight),
-            root.minWidgetHeight,
-            root.maxWidgetHeight
-        );
-    }
+    function modeForDrag(dx, dy, startWidth) {
+        const newWidth = startWidth + dx;
+        const columns = newWidth < root.widthMid1 ? 1 : (newWidth < root.widthMid2 ? 2 : 3);
+        let tall = root.tallMode;
 
-    function commitSize() {
-        root.widgetWidth = root.snapSize(root.widgetWidth, root.minWidgetWidth, root.maxWidgetWidth);
-        root.widgetHeight = root.snapSize(root.widgetHeight, root.minWidgetHeight, root.maxWidgetHeight);
-        root.configEntry.width = root.widgetWidth;
-        root.configEntry.height = root.widgetHeight;
-        root.resizeStartHeight = -1;
-        resizeSettleTimer.restart();
-    }
+        if (dy > root.heightToggleDelta) tall = true;
+        else if (dy < -root.heightToggleDelta) tall = false;
 
-    Timer {
-        id: resizeSettleTimer
-        interval: 300
-        repeat: false
-        onTriggered: root.resizing = false
-    }
-
-    Connections {
-        target: Config.options.background.widgets.opencodeHub
-
-        function onWidthChanged() {
-            if (root.resizing) return;
-            root.widgetWidth = root.clampSize(
-                Number(root.configEntry.width ?? root.defaultWidth),
-                root.minWidgetWidth,
-                root.maxWidgetWidth
-            );
-        }
-
-        function onHeightChanged() {
-            if (root.resizing) return;
-            root.widgetHeight = root.clampSize(
-                Number(root.configEntry.height ?? root.defaultHeight),
-                root.minWidgetHeight,
-                root.maxWidgetHeight
-            );
-        }
-    }
-
-    Connections {
-        target: Config
-
-        function onReadyChanged() {
-            if (Config.ready) root.loadSizeFromConfig();
-        }
+        if (columns === 3) return "large";
+        if (columns === 2) return tall ? "medium" : "wide";
+        return tall ? "tall" : "compact";
     }
 
     Component.onCompleted: {
-        root.loadSizeFromConfig();
         root.pageIndex = root.configEntry.defaultPage === "attention" ? 1 : 0;
     }
 
@@ -259,7 +237,8 @@ AbstractBackgroundWidget {
 
     WidgetCard {
         id: card
-        anchors.fill: parent
+        implicitWidth: root.widgetWidth
+        implicitHeight: root.widgetHeight
         widget: root
         color: Appearance.colors.colLayer1
         tint: Appearance.colors.colLayer1
@@ -587,15 +566,12 @@ AbstractBackgroundWidget {
             resizeMode: "diagonal"
 
             onResizedXY: (dx, dy, startWidth) => {
-                root.resizing = true;
-                resizeSettleTimer.stop();
-                if (root.resizeStartHeight < 0)
-                    root.resizeStartHeight = root.widgetHeight;
-                root.widgetWidth = root.snapSize(startWidth + dx, root.minWidgetWidth, root.maxWidgetWidth);
-                root.widgetHeight = root.snapSize(root.resizeStartHeight + dy, root.minWidgetHeight, root.maxWidgetHeight);
+                root.sizeMode = root.modeForDrag(dx, dy, startWidth);
             }
 
-            onResizeFinished: root.commitSize()
+            onResizeFinished: {
+                root.configEntry.sizeMode = root.sizeMode;
+            }
         }
     }
 }
