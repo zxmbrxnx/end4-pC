@@ -480,8 +480,7 @@ Singleton {
                         property real x: 400
                         property real y: 120
                         property real z: 0
-                        property real width: 360
-                        property real height: 340
+                        property string sizeMode: "medium" // "compact", "wide", "tall", "medium", "large"
                         property bool showCost: true
                         property bool showProject: true
                         property bool privacyMode: false
