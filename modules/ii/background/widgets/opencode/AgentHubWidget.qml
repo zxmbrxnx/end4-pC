@@ -41,7 +41,26 @@ AbstractBackgroundWidget {
 
     property int pageIndex: 0
     property string askSessionID: ""
+    property string askAgent: "build"
+    property bool askAgentTouched: false
     readonly property var askSession: OpenCode.sessionById(root.askSessionID) || OpenCode.defaultSession
+
+    onAskSessionIDChanged: {
+        root.askAgentTouched = false;
+        root.syncAskAgent();
+    }
+    onPageIndexChanged: {
+        if (root.pageIndex !== 2)
+            GlobalStates.desktopWidgetKeyboardFocus = false;
+    }
+
+    Connections {
+        target: OpenCode
+        function onSnapshotChanged() {
+            if (!root.askAgentTouched && root.askSessionID.length === 0)
+                root.syncAskAgent();
+        }
+    }
 
     implicitWidth: card.implicitWidth
     implicitHeight: card.implicitHeight
@@ -63,6 +82,17 @@ AbstractBackgroundWidget {
         root.resizeStartHeight = -1;
     }
 
+    function syncAskAgent() {
+        const session = OpenCode.sessionById(root.askSessionID) || OpenCode.defaultSession;
+        if (!session) return;
+        root.askAgent = session.agent === "plan" ? "plan" : "build";
+    }
+
+    function focusAskInput() {
+        GlobalStates.desktopWidgetKeyboardFocus = true;
+        Qt.callLater(() => askInput.forceActiveFocus());
+    }
+
     function sendAskPrompt() {
         const target = root.askSession;
         if (!target) {
@@ -74,8 +104,7 @@ AbstractBackgroundWidget {
             return;
         }
         if (OpenCode.actionBusy) return;
-        if (OpenCode.promptDefault(askInput.text, target.id)) {
-            root.askSessionID = target.id;
+        if (OpenCode.promptDefault(askInput.text, target.id, root.askAgent)) {
             askInput.text = "";
             root.pageIndex = 0;
         }
@@ -84,6 +113,14 @@ AbstractBackgroundWidget {
     Component.onCompleted: {
         const defaultPage = root.configEntry.defaultPage;
         root.pageIndex = defaultPage === "attention" ? 1 : (defaultPage === "ask" ? 2 : 0);
+        root.syncAskAgent();
+        if (root.pageIndex === 2)
+            GlobalStates.desktopWidgetKeyboardFocus = true;
+    }
+
+    Component.onDestruction: {
+        if (root.pageIndex === 2)
+            GlobalStates.desktopWidgetKeyboardFocus = false;
     }
 
     function statusSummary() {
@@ -353,7 +390,7 @@ AbstractBackgroundWidget {
                     selected: root.pageIndex === 2
                     onActivated: {
                         root.pageIndex = 2;
-                        Qt.callLater(() => askInput.forceActiveFocus());
+                        root.focusAskInput();
                     }
                 }
 
@@ -587,7 +624,11 @@ AbstractBackgroundWidget {
                                         sessionData: modelData
                                         privacyMode: root.privacyMode
                                         selected: root.askSession && root.askSession.id === modelData.id
-                                        onActivated: root.askSessionID = modelData.id
+                                        onActivated: {
+                                            root.askSessionID = modelData.id;
+                                            root.askAgentTouched = false;
+                                            root.syncAskAgent();
+                                        }
                                     }
                                 }
                             }
@@ -609,6 +650,10 @@ AbstractBackgroundWidget {
                                 placeholderText: "Ask this session…"
                                 wrapMode: TextArea.Wrap
                                 enabled: !OpenCode.actionBusy
+                                onActiveFocusChanged: {
+                                    if (askInput.activeFocus)
+                                        GlobalStates.desktopWidgetKeyboardFocus = true;
+                                }
                                 Keys.onPressed: (event) => {
                                     if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
                                         && (event.modifiers & Qt.ControlModifier)) {
@@ -646,7 +691,7 @@ AbstractBackgroundWidget {
                                 label: "Explain"
                                 onActivated: {
                                     askInput.text = "Explain the current changes and any risks.";
-                                    askInput.forceActiveFocus();
+                                    root.focusAskInput();
                                 }
                             }
 
@@ -654,7 +699,7 @@ AbstractBackgroundWidget {
                                 label: "Fix"
                                 onActivated: {
                                     askInput.text = "Find and fix the current errors, then summarize the changes.";
-                                    askInput.forceActiveFocus();
+                                    root.focusAskInput();
                                 }
                             }
 
@@ -662,11 +707,43 @@ AbstractBackgroundWidget {
                                 label: "Tests"
                                 onActivated: {
                                     askInput.text = "Run the relevant tests and fix any failures.";
-                                    askInput.forceActiveFocus();
+                                    root.focusAskInput();
                                 }
                             }
 
                             Item { Layout.fillWidth: true }
+
+                            RippleButton {
+                                implicitHeight: 30
+                                implicitWidth: askModeLabel.implicitWidth + 16
+                                buttonRadius: 15
+                                colBackground: root.askAgent === "plan"
+                                    ? Appearance.colors.colTertiaryContainer
+                                    : Appearance.colors.colPrimaryContainer
+                                colBackgroundHover: root.askAgent === "plan"
+                                    ? Appearance.colors.colTertiaryContainerHover
+                                    : Appearance.colors.colPrimaryContainerHover
+                                colRipple: root.askAgent === "plan"
+                                    ? Appearance.colors.colTertiaryContainerActive
+                                    : Appearance.colors.colPrimaryContainerActive
+                                onClicked: {
+                                    root.askAgent = root.askAgent === "plan" ? "build" : "plan";
+                                    root.askAgentTouched = true;
+                                    root.focusAskInput();
+                                }
+
+                                contentItem: StyledText {
+                                    id: askModeLabel
+                                    text: root.askAgent === "plan" ? "Plan" : "Build"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    font.weight: Font.Medium
+                                    color: root.askAgent === "plan"
+                                        ? Appearance.colors.colOnTertiaryContainer
+                                        : Appearance.colors.colOnPrimaryContainer
+                                }
+                            }
 
                             RippleButton {
                                 implicitHeight: 30

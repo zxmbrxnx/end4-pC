@@ -45,6 +45,7 @@ Singleton {
     property string lastBridgeError: ""
     property string lastActionError: ""
     property bool actionBusy: false
+    property var pendingPrompt: null
     property bool bridgeEnabled: true
     property bool shuttingDown: false
 
@@ -261,7 +262,7 @@ Singleton {
         ]);
     }
 
-    function promptDefault(text, sessionID) {
+    function promptDefault(text, sessionID, agent) {
         const trimmed = String(text || "").trim();
         if (trimmed.length === 0) {
             root.lastActionError = "Write a prompt first";
@@ -271,6 +272,27 @@ Singleton {
         if (!session) {
             root.lastActionError = sessionID ? "OpenCode session not found" : "No OpenCode session available";
             return false;
+        }
+        if (agent && agent !== "plan" && agent !== "build") {
+            root.lastActionError = `Invalid OpenCode agent: ${agent}`;
+            return false;
+        }
+        if (root.actionBusy) {
+            root.lastActionError = "Another OpenCode action is still running";
+            return false;
+        }
+        if (agent && agent !== session.agent) {
+            root.pendingPrompt = { sessionID: session.id, text: trimmed };
+            if (!root.runAction([
+                "post",
+                `/api/session/${session.id}/agent`,
+                "--data",
+                JSON.stringify({ agent: agent })
+            ])) {
+                root.pendingPrompt = null;
+                return false;
+            }
+            return true;
         }
         return root.prompt(session.id, trimmed);
     }
@@ -346,10 +368,16 @@ Singleton {
         onExited: (exitCode, exitStatus) => {
             root.actionBusy = false;
             if (exitCode !== 0) {
+                root.pendingPrompt = null;
                 root.lastActionError = (actionStderr.text || actionStdout.text || `opencode api exited with ${exitCode}`).trim();
                 console.warn("[OpenCode] Action failed:", root.lastActionError);
             } else {
                 root.lastActionError = "";
+                if (root.pendingPrompt) {
+                    const pending = root.pendingPrompt;
+                    root.pendingPrompt = null;
+                    root.prompt(pending.sessionID, pending.text);
+                }
             }
         }
     }
