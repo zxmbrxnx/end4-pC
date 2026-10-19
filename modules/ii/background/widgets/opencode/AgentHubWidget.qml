@@ -210,6 +210,8 @@ AbstractBackgroundWidget {
 
         contentItem: MaterialSymbol {
             anchors.centerIn: parent
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             text: action.iconName
             iconSize: 18
             color: action.hovered ? Appearance.colors.colPrimary : action.fgColor
