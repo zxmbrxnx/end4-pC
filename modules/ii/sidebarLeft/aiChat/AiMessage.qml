@@ -59,9 +59,9 @@ Rectangle {
 
     Keys.onPressed: (event) => {
         if ( // Prevent de-select
-            event.key === Qt.Key_Control || 
-            event.key == Qt.Key_Shift || 
-            event.key == Qt.Key_Alt || 
+            event.key === Qt.Key_Control ||
+            event.key == Qt.Key_Shift ||
+            event.key == Qt.Key_Alt ||
             event.key == Qt.Key_Meta
         ) {
             event.accepted = true
@@ -81,195 +81,6 @@ Rectangle {
         anchors.top: parent.top
         anchors.margins: messagePadding
         spacing: root.contentSpacing
-
-        Rectangle {
-            Layout.fillWidth: true
-            implicitWidth: headerRowLayout.implicitWidth + 4 * 2
-            implicitHeight: headerRowLayout.implicitHeight + 4 * 2
-            color: ColorUtils.applyAlpha(root.accentColor, root.isUser ? 0.26 : 0.18)
-            radius: Appearance.rounding.large
-        
-            RowLayout { // Header
-                id: headerRowLayout
-                anchors {
-                    fill: parent
-                    margins: 4
-                }
-                spacing: 8
-
-                Item { // Name
-                    id: nameWrapper
-                    implicitHeight: Math.max(nameRowLayout.implicitHeight + 5 * 2, 30)
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-
-                    RowLayout {
-                        id: nameRowLayout
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        spacing: 8
-
-                        Item {
-                            Layout.alignment: Qt.AlignVCenter
-                            Layout.fillHeight: true
-                            implicitWidth: 26
-                            implicitHeight: 26
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: width / 2
-                                color: ColorUtils.applyAlpha(root.accentColor, 0.18)
-                                border.width: 1
-                                border.color: ColorUtils.applyAlpha(root.accentColor, 0.30)
-                            }
-
-                            CustomIcon {
-                                id: modelIcon
-                                anchors.centerIn: parent
-                                visible: messageData?.role == 'assistant' && Ai.models[messageData?.model].icon
-                                width: 16
-                                height: 16
-                                source: messageData?.role == 'assistant' ? Ai.models[messageData?.model].icon :
-                                    messageData?.role == 'user' ? 'arch-symbolic' : 'desktop-symbolic'
-
-                                colorize: true
-                                color: root.accentColor
-                            }
-
-                            MaterialSymbol {
-                                id: roleIcon
-                                anchors.centerIn: parent
-                                visible: !modelIcon.visible
-                                iconSize: 17
-                                color: root.accentColor
-                                text: messageData?.role == 'user' ? 'person' : 
-                                    messageData?.role == 'interface' ? 'settings' : 
-                                    messageData?.role == 'assistant' ? 'neurology' : 
-                                    'computer'
-                            }
-                        }
-
-                        StyledText {
-                            id: providerName
-                            Layout.alignment: Qt.AlignVCenter
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            font.pixelSize: Appearance.font.pixelSize.normal
-                            font.weight: Font.Medium
-                            color: root.accentColor
-                            text: messageData?.role == 'assistant' ? Ai.models[messageData?.model].name :
-                                (messageData?.role == 'user' && SystemInfo.username) ? SystemInfo.username :
-                                Translation.tr("Interface")
-                        }
-                    }
-                }
-
-                Button { // Not visible to model
-                    id: modelVisibilityIndicator
-                    visible: messageData?.role == 'interface'
-                    implicitWidth: 16
-                    implicitHeight: 30
-                    Layout.alignment: Qt.AlignVCenter
-
-                    background: Item
-
-                    MaterialSymbol {
-                        id: notVisibleToModelText
-                        anchors.centerIn: parent
-                        iconSize: Appearance.font.pixelSize.small
-                        color: Appearance.colors.colSubtext
-                        text: "visibility_off"
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Not visible to model")
-                    }
-                }
-
-                ButtonGroup {
-                    spacing: 5
-                    opacity: messageHover.hovered || root.editing ? 1 : 0
-                    enabled: opacity > 0
-                    Behavior on opacity { NumberAnimation { duration: 100 } }
-
-                    AiMessageControlButton {
-                        id: regenButton
-                        buttonIcon: "refresh"
-                        visible: messageData?.role === 'assistant'
-
-                        onClicked: {
-                            Ai.regenerate(root.messageIndex)
-                        }
-                        
-                        StyledToolTip {
-                            text: Translation.tr("Regenerate")
-                        }
-                    }
-
-                    AiMessageControlButton {
-                        id: copyButton
-                        buttonIcon: activated ? "inventory" : "content_copy"
-
-                        onClicked: {
-                            Quickshell.clipboardText = root.messageData?.content
-                            copyButton.activated = true
-                            copyIconTimer.restart()
-                        }
-
-                        Timer {
-                            id: copyIconTimer
-                            interval: 1500
-                            repeat: false
-                            onTriggered: {
-                                copyButton.activated = false
-                            }
-                        }
-                        
-                        StyledToolTip {
-                            text: Translation.tr("Copy")
-                        }
-                    }
-                    AiMessageControlButton {
-                        id: editButton
-                        activated: root.editing
-                        enabled: root.messageData?.done ?? false
-                        buttonIcon: "edit"
-                        onClicked: {
-                            root.editing = !root.editing
-                            if (!root.editing) { // Save changes
-                                root.saveMessage()
-                            }
-                        }
-                        StyledToolTip {
-                            text: root.editing ? Translation.tr("Save") : Translation.tr("Edit")
-                        }
-                    }
-                    AiMessageControlButton {
-                        id: toggleMarkdownButton
-                        activated: !root.renderMarkdown
-                        buttonIcon: "code"
-                        onClicked: {
-                            root.renderMarkdown = !root.renderMarkdown
-                        }
-                        StyledToolTip {
-                            text: Translation.tr("View Markdown source")
-                        }
-                    }
-                    AiMessageControlButton {
-                        id: deleteButton
-                        buttonIcon: "close"
-                        onClicked: {
-                            Ai.removeMessage(root.messageIndex)
-                        }
-                        StyledToolTip {
-                            text: Translation.tr("Delete")
-                        }
-                    }
-                }
-            }
-        }
 
         Loader {
             Layout.fillWidth: true
@@ -407,6 +218,120 @@ Rectangle {
             }
         }
 
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 24
+            opacity: messageHover.hovered || root.editing ? 1 : 0
+            enabled: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 100 } }
+
+            RowLayout {
+                anchors {
+                    right: root.isUser ? parent.right : undefined
+                    left: root.isUser ? undefined : parent.left
+                    verticalCenter: parent.verticalCenter
+                }
+                spacing: 4
+
+                Button { // Not visible to model
+                    id: modelVisibilityIndicator
+                    visible: messageData?.role == 'interface'
+                    implicitWidth: 18
+                    implicitHeight: 22
+                    Layout.alignment: Qt.AlignVCenter
+
+                    background: Item
+
+                    MaterialSymbol {
+                        id: notVisibleToModelText
+                        anchors.centerIn: parent
+                        iconSize: Appearance.font.pixelSize.small
+                        color: Appearance.colors.colSubtext
+                        text: "visibility_off"
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Not visible to model")
+                    }
+                }
+
+                ButtonGroup {
+                    spacing: 5
+
+                    AiMessageControlButton {
+                        id: regenButton
+                        buttonIcon: "refresh"
+                        visible: messageData?.role === 'assistant'
+
+                        onClicked: {
+                            Ai.regenerate(root.messageIndex)
+                        }
+
+                        StyledToolTip {
+                            text: Translation.tr("Regenerate")
+                        }
+                    }
+
+                    AiMessageControlButton {
+                        id: copyButton
+                        buttonIcon: activated ? "inventory" : "content_copy"
+
+                        onClicked: {
+                            Quickshell.clipboardText = root.messageData?.content
+                            copyButton.activated = true
+                            copyIconTimer.restart()
+                        }
+
+                        Timer {
+                            id: copyIconTimer
+                            interval: 1500
+                            repeat: false
+                            onTriggered: {
+                                copyButton.activated = false
+                            }
+                        }
+
+                        StyledToolTip {
+                            text: Translation.tr("Copy")
+                        }
+                    }
+                    AiMessageControlButton {
+                        id: editButton
+                        activated: root.editing
+                        enabled: root.messageData?.done ?? false
+                        buttonIcon: "edit"
+                        onClicked: {
+                            root.editing = !root.editing
+                            if (!root.editing) { // Save changes
+                                root.saveMessage()
+                            }
+                        }
+                        StyledToolTip {
+                            text: root.editing ? Translation.tr("Save") : Translation.tr("Edit")
+                        }
+                    }
+                    AiMessageControlButton {
+                        id: toggleMarkdownButton
+                        activated: !root.renderMarkdown
+                        buttonIcon: "code"
+                        onClicked: {
+                            root.renderMarkdown = !root.renderMarkdown
+                        }
+                        StyledToolTip {
+                            text: Translation.tr("View Markdown source")
+                        }
+                    }
+                    AiMessageControlButton {
+                        id: deleteButton
+                        buttonIcon: "close"
+                        onClicked: {
+                            Ai.removeMessage(root.messageIndex)
+                        }
+                        StyledToolTip {
+                            text: Translation.tr("Delete")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
-
