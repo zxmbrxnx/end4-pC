@@ -69,11 +69,10 @@ Keep these changes small and isolated. Everything else should live in new files.
 | `modules/ii/settings/pages/BarConfig.qml` | bar widget entry |
 | `modules/ii/settings/DashboardBarWidgets.qml` | bar widget entry |
 | `modules/ii/settings/pages/InterfaceConfig.qml` | modern quick-toggles style option |
-| `modules/ii/sidebarRight/SidebarRightContent.qml` | modern quick-toggle loader and glass backdrop |
-| `modules/ii/sidebarRight/quickToggles/AndroidQuickPanel.qml` | modern style key and glass panel |
+| `modules/ii/sidebarRight/SidebarRightContent.qml` | modern quick-toggle loader |
+| `modules/ii/sidebarRight/quickToggles/AndroidQuickPanel.qml` | modern style key and transparent panel |
 | `modules/ii/sidebarRight/quickToggles/androidStyle/AndroidQuickToggleButton.qml` | glass toggle visuals |
 | `modules/ii/sidebarLeft/AiChat.qml` | glass prompt input |
-| `modules/ii/sidebarLeft/SidebarLeftContent.qml` | glass sidebar backdrop |
 | `modules/ii/sidebarLeft/aiChat/AiMessage.qml` | glass message cards and avatars |
 | `modules/ii/sidebarLeft/aiChat/MessageCodeBlock.qml` | glass code blocks |
 | `modules/ii/sidebarLeft/aiChat/MessageTextBlock.qml` | chat typography |

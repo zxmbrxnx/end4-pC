@@ -16,10 +16,9 @@ AbstractQuickPanel {
     readonly property bool glass: root.styleKey === "modern"
     Layout.fillWidth: true
 
-    color: root.glass ? ColorUtils.applyAlpha(Appearance.colors.colLayer1, 0.38) : Appearance.colors.colLayer1
-    radius: root.glass ? Appearance.rounding.large : Appearance.rounding.normal
-    border.width: root.glass ? 1 : 0
-    border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer0, 0.14)
+    color: root.glass ? "transparent" : Appearance.colors.colLayer1
+    radius: Appearance.rounding.normal
+    border.width: 0
 
     visible: root.editMode || root.toggles.length > 0
 
