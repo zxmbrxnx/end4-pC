@@ -13,7 +13,7 @@ import qs.services.ai
  * Basic service to handle LLM chats. Supports Google's and OpenAI's API formats.
  * Supports Gemini and OpenAI models.
  * Limitations:
- * - For now functions only work with Gemini API format
+ * - Functions are supported for Gemini and OpenAI-compatible formats
  */
 Singleton {
     id: root
@@ -50,6 +50,8 @@ Singleton {
         return (key?.length > 0);
     }
     property var postResponseHook
+    property bool followUpRequestPending: false
+    property var followUpResponseHook
     property real temperature: Persistent.states?.ai?.temperature ?? 0.5
     property QtObject tokenCount: QtObject {
         property int input: -1
@@ -790,11 +792,20 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             const result = requester.currentStrategy.onRequestFinished(requester.message);
-            
+            const followUp = root.followUpRequestPending;
+            const followUpHook = root.followUpResponseHook;
+            root.followUpRequestPending = false;
+            root.followUpResponseHook = null;
+
             if (result.finished) {
                 requester.markDone();
             } else if (!requester.message.done) {
                 requester.markDone();
+            }
+
+            if (followUp) {
+                requester.makeRequest();
+                if (followUpHook) root.postResponseHook = followUpHook;
             }
 
             // Handle error responses
@@ -827,12 +838,13 @@ Singleton {
         requester.makeRequest();
     }
 
-    function createFunctionOutputMessage(name, output, includeOutputInChat = true) {
+    function createFunctionOutputMessage(name, output, includeOutputInChat = true, callID = "") {
         return aiMessageComponent.createObject(root, {
             "role": "user",
             "content": `[[ Output of ${name} ]]${includeOutputInChat ? ("\n\n<think>\n" + output + "\n</think>") : ""}`,
             "rawContent": `[[ Output of ${name} ]]${includeOutputInChat ? ("\n\n<think>\n" + output + "\n</think>") : ""}`,
             "functionName": name,
+            "functionCallID": callID,
             "functionResponse": output,
             "thinking": false,
             "done": true,
@@ -840,8 +852,8 @@ Singleton {
         });
     }
 
-    function addFunctionOutputMessage(name, output) {
-        const aiMessage = createFunctionOutputMessage(name, output);
+    function addFunctionOutputMessage(name, output, callID = "") {
+        const aiMessage = createFunctionOutputMessage(name, output, true, callID);
         const id = idForMessage(aiMessage);
         root.messageIDs = [...root.messageIDs, id];
         root.messageByID[id] = aiMessage;
@@ -850,14 +862,15 @@ Singleton {
     function rejectCommand(message: AiMessageData) {
         if (!message.functionPending) return;
         message.functionPending = false; // User decided, no more "thinking"
-        addFunctionOutputMessage(message.functionName, Translation.tr("Command rejected by user"))
+        addFunctionOutputMessage(message.functionName, Translation.tr("Command rejected by user"), message.functionCall?.id)
+        requester.makeRequest();
     }
 
     function approveCommand(message: AiMessageData) {
         if (!message.functionPending) return;
         message.functionPending = false; // User decided, no more "thinking"
 
-        const responseMessage = createFunctionOutputMessage(message.functionName, "", false);
+        const responseMessage = createFunctionOutputMessage(message.functionName, "", false, message.functionCall?.id);
         const id = idForMessage(responseMessage);
         root.messageIDs = [...root.messageIDs, id];
         root.messageByID[id] = responseMessage;
@@ -890,26 +903,29 @@ Singleton {
 
     function handleFunctionCall(name, args: var, message: AiMessageData) {
         if (name === "switch_to_search_mode") {
-            const modelId = root.currentModelId;
             root.currentTool = "search"
-            root.postResponseHook = () => { root.currentTool = "functions" }
-            addFunctionOutputMessage(name, Translation.tr("Switched to search mode. Continue with the user's request."))
-            requester.makeRequest();
+            root.followUpResponseHook = () => { root.currentTool = "functions" }
+            addFunctionOutputMessage(name, Translation.tr("Switched to search mode. Continue with the user's request."), message.functionCall?.id)
+            root.followUpRequestPending = true;
         } else if (name === "get_shell_config") {
             const configJson = CF.ObjectUtils.toPlainObject(Config.options)
-            addFunctionOutputMessage(name, JSON.stringify(configJson));
-            requester.makeRequest();
+            addFunctionOutputMessage(name, JSON.stringify(configJson), message.functionCall?.id);
+            root.followUpRequestPending = true;
         } else if (name === "set_shell_config") {
             if (!args.key || !args.value) {
-                addFunctionOutputMessage(name, Translation.tr("Invalid arguments. Must provide `key` and `value`."));
+                addFunctionOutputMessage(name, Translation.tr("Invalid arguments. Must provide `key` and `value`."), message.functionCall?.id);
+                root.followUpRequestPending = true;
                 return;
             }
             const key = args.key;
             const value = args.value;
             Config.setNestedValue(key, value);
+            addFunctionOutputMessage(name, Translation.tr("Config updated: %1 = %2").arg(key).arg(value), message.functionCall?.id);
+            root.followUpRequestPending = true;
         } else if (name === "run_shell_command") {
             if (!args.command || args.command.length === 0) {
-                addFunctionOutputMessage(name, Translation.tr("Invalid arguments. Must provide `command`."));
+                addFunctionOutputMessage(name, Translation.tr("Invalid arguments. Must provide `command`."), message.functionCall?.id);
+                root.followUpRequestPending = true;
                 return;
             }
             const contentToAppend = `\n\n**Command execution request**\n\n\`\`\`command\n${args.command}\n\`\`\``;
@@ -917,7 +933,10 @@ Singleton {
             message.content += contentToAppend;
             message.functionPending = true; // Use thinking to indicate the command is waiting for approval
         }
-        else root.addMessage(Translation.tr("Unknown function call: %1").arg(name), "assistant");
+        else {
+            root.addMessage(Translation.tr("Unknown function call: %1").arg(name), "assistant");
+            root.followUpRequestPending = true;
+        }
     }
 
     function chatToJson() {
@@ -936,6 +955,7 @@ Singleton {
                 "annotationSources": message.annotationSources,
                 "functionName": message.functionName,
                 "functionCall": message.functionCall,
+                "functionCallID": message.functionCallID,
                 "functionResponse": message.functionResponse,
                 "visibleToUser": message.visibleToUser,
             })
@@ -992,6 +1012,7 @@ Singleton {
                     "annotationSources": message.annotationSources,
                     "functionName": message.functionName,
                     "functionCall": message.functionCall,
+                    "functionCallID": message.functionCallID,
                     "functionResponse": message.functionResponse,
                     "visibleToUser": message.visibleToUser,
                 });

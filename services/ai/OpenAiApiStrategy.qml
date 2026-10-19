@@ -4,6 +4,8 @@ import qs.modules.common.functions as CF
 
 ApiStrategy {
     property bool isReasoning: false
+    property var toolCallState: ({})
+    property bool toolCallEmitted: false
     readonly property string localImagePrefix: "__LOCAL_IMAGE_FILE__:"
     
     function buildEndpoint(model: AiModel): string {
@@ -21,6 +23,31 @@ ApiStrategy {
         for (let i = 0; i < messages.length; i++) {
             const message = messages[i];
             const isLastMessage = (i === messages.length - 1);
+
+            if (message.functionCall && message.functionCall.name) {
+                formattedMessages.push({
+                    "role": "assistant",
+                    "content": null,
+                    "tool_calls": [{
+                        "id": message.functionCall.id || `call_${i}`,
+                        "type": "function",
+                        "function": {
+                            "name": message.functionCall.name,
+                            "arguments": JSON.stringify(message.functionCall.args ?? {})
+                        }
+                    }]
+                });
+                continue;
+            }
+
+            if (message.functionName && message.functionName.length > 0 && message.functionResponse !== undefined) {
+                formattedMessages.push({
+                    "role": "tool",
+                    "tool_call_id": message.functionCallID || message.functionCall?.id || `call_${i}`,
+                    "content": message.functionResponse ?? ""
+                });
+                continue;
+            }
 
             let imagePath = "";
             if (isLastMessage && hasPendingFile) {
@@ -103,6 +130,29 @@ ApiStrategy {
         return res;
     }
 
+    function emitToolCall(message) {
+        if (toolCallEmitted) return {};
+        const keys = Object.keys(toolCallState);
+        if (keys.length === 0) return {};
+        const call = toolCallState[keys[0]];
+        if (!call || !call.name) return {};
+        toolCallEmitted = true;
+        let args = {};
+        try {
+            args = call.arguments ? JSON.parse(call.arguments) : {};
+        } catch (e) {
+            args = {};
+        }
+        const id = call.id || `call_${Date.now()}`;
+        call.id = id;
+        const annotation = `\n\n[[ Function: ${call.name}(${JSON.stringify(args, null, 2)}) ]]\n`;
+        message.rawContent += annotation;
+        message.content += annotation;
+        message.functionName = call.name;
+        message.functionCall = { name: call.name, args: args, id: id };
+        return { functionCall: { name: call.name, args: args, id: id } };
+    }
+
     function parseResponseLine(line, message) {
         // Remove 'data: ' prefix if present and trim whitespace
         let cleanData = line.trim();
@@ -115,6 +165,10 @@ ApiStrategy {
         // Handle special cases
         if (!cleanData || cleanData.startsWith(":")) return {};
         if (cleanData === "[DONE]") {
+            if (!toolCallEmitted && Object.keys(toolCallState).length > 0) {
+                const call = emitToolCall(message);
+                if (call.functionCall) return call;
+            }
             return { finished: true };
         }
         
@@ -130,10 +184,40 @@ ApiStrategy {
                 return { finished: true };
             }
 
+            const choice = dataJson.choices?.[0];
+            const deltaToolCalls = choice?.delta?.tool_calls;
+            if (deltaToolCalls) {
+                for (const tc of deltaToolCalls) {
+                    const idx = tc.index ?? 0;
+                    if (!toolCallState[idx]) toolCallState[idx] = { id: "", name: "", arguments: "" };
+                    if (tc.id) toolCallState[idx].id = tc.id;
+                    if (tc.function?.name) toolCallState[idx].name = tc.function.name;
+                    if (tc.function?.arguments) toolCallState[idx].arguments += tc.function.arguments;
+                }
+            }
+
+            const messageToolCalls = choice?.message?.tool_calls;
+            if (messageToolCalls) {
+                for (const tc of messageToolCalls) {
+                    const idx = tc.index ?? 0;
+                    if (!toolCallState[idx]) toolCallState[idx] = { id: "", name: "", arguments: "" };
+                    if (tc.id) toolCallState[idx].id = tc.id;
+                    if (tc.function?.name) toolCallState[idx].name = tc.function.name;
+                    if (tc.function?.arguments) toolCallState[idx].arguments += tc.function.arguments;
+                }
+            }
+
+            const finishReason = choice?.finish_reason;
+            if (finishReason && finishReason !== "length" && Object.keys(toolCallState).length > 0) {
+                const call = emitToolCall(message);
+                if (call.functionCall) return call;
+            }
+
             let newContent = "";
 
-            const responseContent = dataJson.choices[0]?.delta?.content || dataJson.message?.content;
-            const responseReasoning = dataJson.choices[0]?.delta?.reasoning || dataJson.choices[0]?.delta?.reasoning_content;
+            const delta = choice?.delta;
+            const responseContent = delta?.content || dataJson.message?.content;
+            const responseReasoning = delta?.reasoning || delta?.reasoning_content;
 
             if (responseContent && responseContent.length > 0) {
                 if (isReasoning) {
@@ -168,6 +252,10 @@ ApiStrategy {
             }
 
             if (dataJson.done) {
+                if (!toolCallEmitted && Object.keys(toolCallState).length > 0) {
+                    const call = emitToolCall(message);
+                    if (call.functionCall) return call;
+                }
                 return { finished: true };
             }
             
@@ -187,6 +275,8 @@ ApiStrategy {
     
     function reset() {
         isReasoning = false;
+        toolCallState = ({});
+        toolCallEmitted = false;
     }
 
 }

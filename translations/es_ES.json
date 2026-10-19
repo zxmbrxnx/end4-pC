@@ -1344,5 +1344,6 @@
   "Agent alerts in dynamic island": "Alertas de agente en la isla dinámica",
   "Popup sessions": "Sesiones en el popup",
   "Add the OpenCode widget from Settings → Bar to show it in the bar.": "Añade el widget de OpenCode desde Ajustes → Barra para mostrarlo en la barra.",
-  "Modern": "Moderno"
+  "Modern": "Moderno",
+  "Config updated: %1 = %2": "Configuración actualizada: %1 = %2"
 }
