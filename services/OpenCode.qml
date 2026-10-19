@@ -210,12 +210,12 @@ Singleton {
     }
 
     function openOpenCode(directory) {
-        const target = directory && directory.length > 0 ? directory : Directories.home;
+        const target = FileUtils.trimFileProtocol(directory && directory.length > 0 ? directory : Directories.home);
         root.openTerminalCommand([target]);
     }
 
     function openSession(sessionID, directory) {
-        const target = directory && directory.length > 0 ? directory : Directories.home;
+        const target = FileUtils.trimFileProtocol(directory && directory.length > 0 ? directory : Directories.home);
         root.openTerminalCommand(sessionID ? ["-s", sessionID, target] : [target]);
     }
 
