@@ -109,6 +109,28 @@ Singleton {
             }
         },
         {
+            action: "ask",
+            execute: args => {
+                const prompt = (args || "").trim();
+                if (prompt.length === 0) {
+                    OpenCode.openOpenCode();
+                    return;
+                }
+                if (!OpenCode.connected) {
+                    Quickshell.execDetached(["notify-send", "-a", "opencode", "-u", "critical", "OpenCode", OpenCode.statusText]);
+                    return;
+                }
+                if (!OpenCode.defaultSession) {
+                    OpenCode.openOpenCode();
+                    Quickshell.execDetached(["notify-send", "-a", "opencode", "OpenCode", "No session available. Start a session first."]);
+                    return;
+                }
+                if (!OpenCode.promptDefault(prompt)) {
+                    Quickshell.execDetached(["notify-send", "-a", "opencode", "-u", "critical", "OpenCode", OpenCode.lastActionError || "Could not send prompt"]);
+                }
+            }
+        },
+        {
             action: "wallpaper",
             execute: () => {
                 Hyprland.dispatch(`hl.dsp.global("quickshell:wallpaperSelectorToggle")`)

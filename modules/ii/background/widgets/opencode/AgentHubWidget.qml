@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qs
 import qs.services
@@ -39,6 +40,8 @@ AbstractBackgroundWidget {
     readonly property bool showProject: root.configEntry.showProject ?? true
 
     property int pageIndex: 0
+    property string askSessionID: ""
+    readonly property var askSession: OpenCode.sessionById(root.askSessionID) || OpenCode.defaultSession
 
     implicitWidth: card.implicitWidth
     implicitHeight: card.implicitHeight
@@ -60,8 +63,27 @@ AbstractBackgroundWidget {
         root.resizeStartHeight = -1;
     }
 
+    function sendAskPrompt() {
+        const target = root.askSession;
+        if (!target) {
+            OpenCode.lastActionError = "No OpenCode session available";
+            return;
+        }
+        if (!OpenCode.connected) {
+            OpenCode.lastActionError = OpenCode.statusText;
+            return;
+        }
+        if (OpenCode.actionBusy) return;
+        if (OpenCode.promptDefault(askInput.text, target.id)) {
+            root.askSessionID = target.id;
+            askInput.text = "";
+            root.pageIndex = 0;
+        }
+    }
+
     Component.onCompleted: {
-        root.pageIndex = root.configEntry.defaultPage === "attention" ? 1 : 0;
+        const defaultPage = root.configEntry.defaultPage;
+        root.pageIndex = defaultPage === "attention" ? 1 : (defaultPage === "ask" ? 2 : 0);
     }
 
     function statusSummary() {
@@ -213,6 +235,89 @@ AbstractBackgroundWidget {
         }
     }
 
+    component SessionChip: RippleButton {
+        id: chip
+        property var sessionData
+        property bool selected
+        signal activated()
+
+        implicitHeight: 28
+        implicitWidth: chipContent.implicitWidth + 18
+        buttonRadius: 14
+        colBackground: chip.selected
+            ? Appearance.colors.colPrimaryContainer
+            : Appearance.colors.colLayer2
+        colBackgroundHover: chip.selected
+            ? Appearance.colors.colPrimaryContainerHover
+            : Appearance.colors.colLayer2Hover
+        colRipple: chip.selected
+            ? Appearance.colors.colPrimaryContainerActive
+            : Appearance.colors.colLayer2Active
+        onClicked: chip.activated()
+
+        contentItem: Item {
+            implicitWidth: chipContent.implicitWidth
+            implicitHeight: chipContent.implicitHeight
+
+            RowLayout {
+                id: chipContent
+                anchors.centerIn: parent
+                spacing: 5
+
+                Rectangle {
+                    implicitWidth: 6
+                    implicitHeight: 6
+                    radius: 3
+                    color: {
+                        if (chip.sessionData && chip.sessionData.status === "waiting") return Appearance.colors.colTertiary;
+                        if (chip.sessionData && chip.sessionData.status === "working") return Appearance.colors.colPrimary;
+                        if (chip.sessionData && chip.sessionData.status === "error") return Appearance.colors.colError;
+                        return Appearance.colors.colOutline;
+                    }
+                }
+
+                StyledText {
+                    Layout.maximumWidth: 150
+                    text: root.privacyMode ? "Session" : ((chip.sessionData && chip.sessionData.title) || "Untitled session")
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    font.weight: chip.selected ? Font.Medium : Font.Normal
+                    color: chip.selected
+                        ? Appearance.colors.colOnPrimaryContainer
+                        : Appearance.colors.colOnLayer2
+                }
+            }
+        }
+    }
+
+    component PromptTemplate: RippleButton {
+        id: template
+        property string label
+        signal activated()
+
+        implicitHeight: 24
+        implicitWidth: templateLabel.implicitWidth + 16
+        buttonRadius: 12
+        colBackground: Appearance.colors.colLayer2
+        colBackgroundHover: Appearance.colors.colLayer2Hover
+        colRipple: Appearance.colors.colLayer2Active
+        onClicked: template.activated()
+
+        contentItem: Item {
+            implicitWidth: templateLabel.implicitWidth
+            implicitHeight: templateLabel.implicitHeight
+
+            StyledText {
+                id: templateLabel
+                anchors.centerIn: parent
+                text: template.label
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colOnLayer2
+            }
+        }
+    }
+
     WidgetCard {
         id: card
         implicitWidth: root.widgetWidth
@@ -323,6 +428,16 @@ AbstractBackgroundWidget {
                     urgent: OpenCode.pendingCount > 0
                     selected: root.pageIndex === 1
                     onActivated: root.pageIndex = 1
+                }
+
+                HubTab {
+                    label: "Ask"
+                    iconName: "edit_note"
+                    selected: root.pageIndex === 2
+                    onActivated: {
+                        root.pageIndex = 2;
+                        Qt.callLater(() => askInput.forceActiveFocus());
+                    }
                 }
 
                 Item { Layout.fillWidth: true }
@@ -518,6 +633,150 @@ AbstractBackgroundWidget {
                                         font.weight: Font.Medium
                                         color: Appearance.colors.colOnSecondary
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Item {
+                    id: askPage
+                    anchors.fill: parent
+                    visible: root.pageIndex === 2
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 6
+
+                        Flickable {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 30
+                            contentWidth: chipRow.implicitWidth
+                            contentHeight: chipRow.implicitHeight
+                            clip: true
+                            boundsBehavior: Flickable.StopAtBounds
+                            visible: OpenCode.sortedSessions.length > 0
+
+                            RowLayout {
+                                id: chipRow
+                                spacing: 4
+
+                                Repeater {
+                                    model: OpenCode.sortedSessions.slice(0, 12)
+
+                                    delegate: SessionChip {
+                                        required property var modelData
+
+                                        sessionData: modelData
+                                        selected: root.askSession && root.askSession.id === modelData.id
+                                        onActivated: root.askSessionID = modelData.id
+                                    }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            Layout.minimumHeight: 64
+                            visible: OpenCode.sortedSessions.length > 0
+                            radius: Appearance.rounding.normal
+                            color: Appearance.colors.colSurfaceContainerLow
+
+                            StyledTextArea {
+                                id: askInput
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                background: null
+                                placeholderText: "Ask this session…"
+                                wrapMode: TextArea.Wrap
+                                enabled: !OpenCode.actionBusy
+                                Keys.onPressed: (event) => {
+                                    if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                                        && (event.modifiers & Qt.ControlModifier)) {
+                                        root.sendAskPrompt();
+                                        event.accepted = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: OpenCode.sortedSessions.length === 0
+
+                            EmptyState {
+                                anchors.fill: parent
+                                icon: root.emptyIcon()
+                                title: root.emptyTitle()
+                                body: root.emptyBody()
+                                actionText: root.emptyActionText()
+                                actionIcon: "terminal"
+                                busy: OpenCode.effectiveState === "starting"
+                                    || OpenCode.effectiveState === "reconnecting"
+                                onActionClicked: OpenCode.openOpenCode()
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            visible: OpenCode.sortedSessions.length > 0
+
+                            PromptTemplate {
+                                label: "Explain"
+                                onActivated: {
+                                    askInput.text = "Explain the current changes and any risks.";
+                                    askInput.forceActiveFocus();
+                                }
+                            }
+
+                            PromptTemplate {
+                                label: "Fix"
+                                onActivated: {
+                                    askInput.text = "Find and fix the current errors, then summarize the changes.";
+                                    askInput.forceActiveFocus();
+                                }
+                            }
+
+                            PromptTemplate {
+                                label: "Tests"
+                                onActivated: {
+                                    askInput.text = "Run the relevant tests and fix any failures.";
+                                    askInput.forceActiveFocus();
+                                }
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            RippleButton {
+                                implicitHeight: 30
+                                implicitWidth: 78
+                                buttonRadius: 15
+                                enabled: root.askSession && OpenCode.connected
+                                    && askInput.text.trim().length > 0
+                                    && !OpenCode.actionBusy
+                                colBackground: enabled
+                                    ? Appearance.colors.colPrimary
+                                    : Appearance.colors.colLayer2
+                                colBackgroundHover: enabled
+                                    ? Appearance.colors.colPrimaryHover
+                                    : Appearance.colors.colLayer2Hover
+                                colRipple: enabled
+                                    ? Appearance.colors.colPrimaryActive
+                                    : Appearance.colors.colLayer2Active
+                                onClicked: root.sendAskPrompt()
+
+                                contentItem: StyledText {
+                                    text: "Send"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    font.weight: Font.Medium
+                                    color: enabled
+                                        ? Appearance.colors.colOnPrimary
+                                        : Appearance.colors.colSubtext
                                 }
                             }
                         }

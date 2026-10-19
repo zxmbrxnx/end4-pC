@@ -84,6 +84,8 @@ Singleton {
         });
     }
 
+    readonly property var defaultSession: root.sortedSessions.length > 0 ? root.sortedSessions[0] : null
+
     readonly property string statusText: {
         if (root.effectiveState === "not_installed") return "OpenCode is not installed";
         if (root.effectiveState === "not_running") return "OpenCode is not running";
@@ -257,6 +259,20 @@ Singleton {
             "--data",
             JSON.stringify({ text: text })
         ]);
+    }
+
+    function promptDefault(text, sessionID) {
+        const trimmed = String(text || "").trim();
+        if (trimmed.length === 0) {
+            root.lastActionError = "Write a prompt first";
+            return false;
+        }
+        const session = sessionID ? root.sessionById(sessionID) : root.defaultSession;
+        if (!session) {
+            root.lastActionError = sessionID ? "OpenCode session not found" : "No OpenCode session available";
+            return false;
+        }
+        return root.prompt(session.id, trimmed);
     }
 
     FileView {
