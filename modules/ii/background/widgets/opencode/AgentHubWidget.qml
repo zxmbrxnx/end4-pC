@@ -22,16 +22,10 @@ AbstractBackgroundWidget {
     readonly property real maxWidgetWidth: Math.max(root.minWidgetWidth, Math.min(760, root.scaledScreenWidth - 24))
     readonly property real maxWidgetHeight: Math.max(root.minWidgetHeight, Math.min(820, root.scaledScreenHeight - 40))
 
-    property real resizeWidth: -1
-    property real resizeHeight: -1
+    property real widgetWidth: root.defaultWidth
+    property real widgetHeight: root.defaultHeight
+    property bool resizing: false
     property real resizeStartHeight: -1
-
-    readonly property real widgetWidth: root.resizeWidth > 0
-        ? root.resizeWidth
-        : root.clampSize(Number(root.configEntry.width ?? root.defaultWidth), root.minWidgetWidth, root.maxWidgetWidth)
-    readonly property real widgetHeight: root.resizeHeight > 0
-        ? root.resizeHeight
-        : root.clampSize(Number(root.configEntry.height ?? root.defaultHeight), root.minWidgetHeight, root.maxWidgetHeight)
 
     readonly property bool privacyMode: root.configEntry.privacyMode ?? false
     readonly property bool showCost: root.configEntry.showCost ?? true
@@ -50,7 +44,57 @@ AbstractBackgroundWidget {
         return root.clampSize(Math.round(value / 20) * 20, minimum, maximum);
     }
 
+    function loadSizeFromConfig() {
+        root.widgetWidth = root.clampSize(
+            Number(root.configEntry.width ?? root.defaultWidth),
+            root.minWidgetWidth,
+            root.maxWidgetWidth
+        );
+        root.widgetHeight = root.clampSize(
+            Number(root.configEntry.height ?? root.defaultHeight),
+            root.minWidgetHeight,
+            root.maxWidgetHeight
+        );
+    }
+
+    function commitSize() {
+        root.configEntry.width = Math.round(root.widgetWidth);
+        root.configEntry.height = Math.round(root.widgetHeight);
+        root.resizeStartHeight = -1;
+        resizeSettleTimer.restart();
+    }
+
+    Timer {
+        id: resizeSettleTimer
+        interval: 300
+        repeat: false
+        onTriggered: root.resizing = false
+    }
+
+    Connections {
+        target: Config.options.background.widgets.opencodeHub
+
+        function onWidthChanged() {
+            if (root.resizing) return;
+            root.widgetWidth = root.clampSize(
+                Number(root.configEntry.width ?? root.defaultWidth),
+                root.minWidgetWidth,
+                root.maxWidgetWidth
+            );
+        }
+
+        function onHeightChanged() {
+            if (root.resizing) return;
+            root.widgetHeight = root.clampSize(
+                Number(root.configEntry.height ?? root.defaultHeight),
+                root.minWidgetHeight,
+                root.maxWidgetHeight
+            );
+        }
+    }
+
     Component.onCompleted: {
+        root.loadSizeFromConfig();
         root.pageIndex = root.configEntry.defaultPage === "attention" ? 1 : 0;
     }
 
@@ -531,19 +575,15 @@ AbstractBackgroundWidget {
             resizeMode: "diagonal"
 
             onResizedXY: (dx, dy, startWidth) => {
+                root.resizing = true;
+                resizeSettleTimer.stop();
                 if (root.resizeStartHeight < 0)
                     root.resizeStartHeight = root.widgetHeight;
-                root.resizeWidth = root.snapSize(startWidth + dx, root.minWidgetWidth, root.maxWidgetWidth);
-                root.resizeHeight = root.snapSize(root.resizeStartHeight + dy, root.minWidgetHeight, root.maxWidgetHeight);
+                root.widgetWidth = root.snapSize(startWidth + dx, root.minWidgetWidth, root.maxWidgetWidth);
+                root.widgetHeight = root.snapSize(root.resizeStartHeight + dy, root.minWidgetHeight, root.maxWidgetHeight);
             }
 
-            onResizeFinished: {
-                root.configEntry.width = root.widgetWidth;
-                root.configEntry.height = root.widgetHeight;
-                root.resizeWidth = -1;
-                root.resizeHeight = -1;
-                root.resizeStartHeight = -1;
-            }
+            onResizeFinished: root.commitSize()
         }
     }
 }
