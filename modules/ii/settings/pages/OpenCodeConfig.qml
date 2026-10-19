@@ -178,18 +178,30 @@ ContentPage {
                     onCheckedChanged: Config.options.background.widgets.opencodeHub.privacyMode = checked
                 }
 
-                ConfigSelectionArray {
-                    text: "Size"
-                    icon: "aspect_ratio"
-                    currentValue: Config.options.background.widgets.opencodeHub.sizeMode
-                    options: [
-                        { displayName: "Compact", icon: "crop_square", value: "compact" },
-                        { displayName: "Wide", icon: "crop_landscape", value: "wide" },
-                        { displayName: "Tall", icon: "crop_portrait", value: "tall" },
-                        { displayName: "Medium", icon: "aspect_ratio", value: "medium" },
-                        { displayName: "Large", icon: "fullscreen", value: "large" }
-                    ]
-                    onSelected: newValue => Config.options.background.widgets.opencodeHub.sizeMode = newValue
+                ConfigSlider {
+                    Layout.fillWidth: true
+                    text: "Widget width"
+                    buttonIcon: "width"
+                    value: Config.options.background.widgets.opencodeHub.width
+                    from: 320
+                    to: 760
+                    stepSize: 10
+                    usePercentTooltip: false
+                    stopIndicatorValues: [520]
+                    onValueChanged: Config.options.background.widgets.opencodeHub.width = Math.round(value)
+                }
+
+                ConfigSlider {
+                    Layout.fillWidth: true
+                    text: "Widget height"
+                    buttonIcon: "height"
+                    value: Config.options.background.widgets.opencodeHub.height
+                    from: 280
+                    to: 820
+                    stepSize: 10
+                    usePercentTooltip: false
+                    stopIndicatorValues: [500]
+                    onValueChanged: Config.options.background.widgets.opencodeHub.height = Math.round(value)
                 }
 
                 RippleButton {
@@ -199,7 +211,10 @@ ContentPage {
                     colBackground: Appearance.colors.colSecondaryContainer
                     colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                     colRipple: Appearance.colors.colSecondaryContainerActive
-                    onClicked: Config.options.background.widgets.opencodeHub.sizeMode = "medium"
+                    onClicked: {
+                        Config.options.background.widgets.opencodeHub.width = 520;
+                        Config.options.background.widgets.opencodeHub.height = 500;
+                    }
 
                     contentItem: StyledText {
                         text: "Reset size"
