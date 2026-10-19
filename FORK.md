@@ -68,6 +68,7 @@ Keep these changes small and isolated. Everything else should live in new files.
 | `modules/ii/bar/DynamicIsland.qml` | OpenCode alert provider and component |
 | `modules/ii/settings/pages/BarConfig.qml` | bar widget entry |
 | `modules/ii/settings/DashboardBarWidgets.qml` | bar widget entry |
+| `services/LauncherSearch.qml` | `/ask` launcher action |
 | `services/SettingsPages.qml` | settings page entry |
 | `translations/en_US.json`, `translations/es_ES.json` | optional new keys |
 | `.gitignore` | ignore Python cache files |

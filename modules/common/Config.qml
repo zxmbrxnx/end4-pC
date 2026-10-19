@@ -485,7 +485,7 @@ Singleton {
                         property bool showCost: true
                         property bool showProject: true
                         property bool privacyMode: false
-                        property string defaultPage: "sessions" // "sessions" | "attention"
+                        property string defaultPage: "sessions" // "sessions" | "attention" | "ask"
                     }
                 }
                 property JsonObject liveWallpaper: JsonObject {

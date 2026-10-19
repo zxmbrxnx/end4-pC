@@ -231,7 +231,8 @@ ContentPage {
                     currentValue: Config.options.background.widgets.opencodeHub.defaultPage
                     options: [
                         { displayName: "Sessions", icon: "forum", value: "sessions" },
-                        { displayName: "Attention", icon: "notification_important", value: "attention" }
+                        { displayName: "Attention", icon: "notification_important", value: "attention" },
+                        { displayName: "Ask", icon: "edit_note", value: "ask" }
                     ]
                     onSelected: newValue => Config.options.background.widgets.opencodeHub.defaultPage = newValue
                 }
@@ -241,7 +242,8 @@ ContentPage {
                 Layout.fillWidth: true
                 Layout.leftMargin: 8
                 Layout.rightMargin: 8
-                text: "You can also drag the bottom-right corner of the widget to resize it."
+                text: "You can also drag the bottom-right corner of the widget to resize it.\n"
+                    + "Launcher: /ask &lt;prompt&gt; sends to the default session."
                 wrapMode: Text.Wrap
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 color: Appearance.colors.colSubtext
