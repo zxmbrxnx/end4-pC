@@ -16,6 +16,7 @@ Rectangle {
     signal openRequested()
     signal interruptRequested()
     signal deleteRequested()
+    signal askRequested()
 
     property bool confirmDelete: false
 
@@ -196,7 +197,7 @@ Rectangle {
         Item {
             id: trailingSlot
             Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: 78
+            Layout.preferredWidth: 103
             implicitHeight: 34
 
             ColumnLayout {
@@ -235,6 +236,16 @@ Rectangle {
                 visible: opacity > 0
                 enabled: opacity > 0
                 Behavior on opacity { NumberAnimation { duration: 80 } }
+
+                RowAction {
+                    iconName: "edit_note"
+                    fgColor: Appearance.colors.colPrimary
+                    onActivated: root.askRequested()
+
+                    StyledToolTip {
+                        text: "Ask this session"
+                    }
+                }
 
                 RowAction {
                     iconName: "terminal"

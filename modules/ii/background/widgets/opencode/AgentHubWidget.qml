@@ -93,6 +93,14 @@ AbstractBackgroundWidget {
         Qt.callLater(() => askInput.forceActiveFocus());
     }
 
+    function openAskForSession(sessionID) {
+        root.askSessionID = sessionID;
+        root.askAgentTouched = false;
+        root.syncAskAgent();
+        root.pageIndex = 2;
+        root.focusAskInput();
+    }
+
     function sendAskPrompt() {
         const target = root.askSession;
         if (!target) {
@@ -475,6 +483,7 @@ AbstractBackgroundWidget {
                                     onOpenRequested: OpenCode.openSession(modelData.id, modelData.directory)
                                     onInterruptRequested: OpenCode.interrupt(modelData.id)
                                     onDeleteRequested: OpenCode.deleteSession(modelData.id)
+                                    onAskRequested: root.openAskForSession(modelData.id)
                                 }
                             }
 
