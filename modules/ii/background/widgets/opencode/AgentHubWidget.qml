@@ -15,15 +15,40 @@ AbstractBackgroundWidget {
     hoverEnabled: true
     visibleWhenLocked: false
 
-    readonly property int maxSessions: Math.max(1, Number(root.configEntry.maxSessions ?? 6))
+    readonly property real defaultWidth: 360
+    readonly property real defaultHeight: 340
+    readonly property real minWidgetWidth: 320
+    readonly property real minWidgetHeight: 280
+    readonly property real maxWidgetWidth: Math.max(root.minWidgetWidth, Math.min(760, root.scaledScreenWidth - 24))
+    readonly property real maxWidgetHeight: Math.max(root.minWidgetHeight, Math.min(820, root.scaledScreenHeight - 40))
+
+    property real resizeWidth: -1
+    property real resizeHeight: -1
+    property real resizeStartHeight: -1
+
+    readonly property real widgetWidth: root.resizeWidth > 0
+        ? root.resizeWidth
+        : root.clampSize(Number(root.configEntry.width ?? root.defaultWidth), root.minWidgetWidth, root.maxWidgetWidth)
+    readonly property real widgetHeight: root.resizeHeight > 0
+        ? root.resizeHeight
+        : root.clampSize(Number(root.configEntry.height ?? root.defaultHeight), root.minWidgetHeight, root.maxWidgetHeight)
+
     readonly property bool privacyMode: root.configEntry.privacyMode ?? false
     readonly property bool showCost: root.configEntry.showCost ?? true
     readonly property bool showProject: root.configEntry.showProject ?? true
 
     property int pageIndex: 0
 
-    implicitWidth: 360
-    implicitHeight: 340
+    implicitWidth: root.widgetWidth
+    implicitHeight: root.widgetHeight
+
+    function clampSize(value, minimum, maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
+    }
+
+    function snapSize(value, minimum, maximum) {
+        return root.clampSize(Math.round(value / 20) * 20, minimum, maximum);
+    }
 
     Component.onCompleted: {
         root.pageIndex = root.configEntry.defaultPage === "attention" ? 1 : 0;
@@ -177,6 +202,7 @@ AbstractBackgroundWidget {
     }
 
     WidgetCard {
+        id: card
         anchors.fill: parent
         widget: root
         color: Appearance.colors.colLayer1
@@ -344,7 +370,7 @@ AbstractBackgroundWidget {
                                 anchors.fill: parent
                                 clip: true
                                 spacing: 6
-                                model: OpenCode.sortedSessions.slice(0, root.maxSessions)
+                                model: OpenCode.sortedSessions
 
                                 delegate: SessionRow {
                                     required property var modelData
@@ -377,14 +403,6 @@ AbstractBackgroundWidget {
                             }
                         }
 
-                        StyledText {
-                            visible: OpenCode.sortedSessions.length > root.maxSessions
-                            Layout.fillWidth: true
-                            text: `+${OpenCode.sortedSessions.length - root.maxSessions} more sessions`
-                            horizontalAlignment: Text.AlignHCenter
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
-                        }
                     }
                 }
 
@@ -502,6 +520,29 @@ AbstractBackgroundWidget {
                         ? Appearance.colors.colError
                         : Appearance.colors.colSubtext
                 }
+            }
+        }
+
+        ResizeHandler {
+            anchorItem: card
+            hoverActive: root.containsMouse
+            locked: Config.options.background.widgetsLocked
+            currentWidth: root.widgetWidth
+            resizeMode: "diagonal"
+
+            onResizedXY: (dx, dy, startWidth) => {
+                if (root.resizeStartHeight < 0)
+                    root.resizeStartHeight = root.widgetHeight;
+                root.resizeWidth = root.snapSize(startWidth + dx, root.minWidgetWidth, root.maxWidgetWidth);
+                root.resizeHeight = root.snapSize(root.resizeStartHeight + dy, root.minWidgetHeight, root.maxWidgetHeight);
+            }
+
+            onResizeFinished: {
+                root.configEntry.width = root.widgetWidth;
+                root.configEntry.height = root.widgetHeight;
+                root.resizeWidth = -1;
+                root.resizeHeight = -1;
+                root.resizeStartHeight = -1;
             }
         }
     }
