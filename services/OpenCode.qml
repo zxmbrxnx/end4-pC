@@ -202,17 +202,21 @@ Singleton {
         return `'${StringUtils.shellSingleQuoteEscape(String(value))}'`;
     }
 
+    function openTerminalCommand(args) {
+        const terminal = Config.options.apps.terminal || "kitty -1";
+        const wrapper = `opencode "$@"; code=$?; if [ $code -ne 0 ]; then printf "\\n[opencode] exited with code %s\\n" "$code"; read -r -p "Press Enter to close..." _; fi`;
+        const quotedArgs = args.map(value => root.shellQuote(value)).join(" ");
+        Quickshell.execDetached(["bash", "-c", `${terminal} bash -c ${root.shellQuote(wrapper)} opencode ${quotedArgs}`]);
+    }
+
     function openOpenCode(directory) {
         const target = directory && directory.length > 0 ? directory : Directories.home;
-        const terminal = Config.options.apps.terminal || "kitty -1";
-        Quickshell.execDetached(["bash", "-c", `${terminal} opencode ${root.shellQuote(target)}`]);
+        root.openTerminalCommand([target]);
     }
 
     function openSession(sessionID, directory) {
         const target = directory && directory.length > 0 ? directory : Directories.home;
-        const terminal = Config.options.apps.terminal || "kitty -1";
-        const sessionPart = sessionID ? ` -s ${root.shellQuote(sessionID)}` : "";
-        Quickshell.execDetached(["bash", "-c", `${terminal} opencode${sessionPart} ${root.shellQuote(target)}`]);
+        root.openTerminalCommand(sessionID ? ["-s", sessionID, target] : [target]);
     }
 
     function startService() {
